@@ -6,4 +6,4 @@ requests-toolbelt
 python-multipart
 pydantic
 pymodbus
-httpx
+httpxpywebview

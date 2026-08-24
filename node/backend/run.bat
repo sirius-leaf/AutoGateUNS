@@ -14,5 +14,5 @@ if not exist ".venv" (
     call .venv\Scripts\activate.bat
 )
 
-REM Jalankan server
-uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
+REM Jalankan aplikasi (Backend + WebView)
+python main.py

@@ -14,5 +14,5 @@ else
     source .venv/bin/activate
 fi
 
-# Jalankan server
-uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
+# Jalankan aplikasi (Backend + WebView)
+python main.py

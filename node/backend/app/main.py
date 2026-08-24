@@ -68,7 +68,9 @@ async def on_shutdown():
     await sync_service.stop()
 
 
-@app.get("/")
+from fastapi.responses import FileResponse
+
+@app.get("/api/info")
 def root():
     return {
         "status": "ok",
@@ -76,3 +78,19 @@ def root():
         "node_id": settings.NODE_ID,
         "node_name": settings.NODE_NAME,
     }
+
+# SPA Catch-all untuk Frontend
+frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+
+@app.get("/{catchall:path}")
+async def serve_spa(catchall: str):
+    # Coba cari file fisik (misal: favicon.ico, assets/index.js)
+    file_path = frontend_dist / catchall
+    if catchall and file_path.is_file():
+        return FileResponse(file_path)
+    
+    # Fallback ke index.html untuk Vue Router
+    index_path = frontend_dist / "index.html"
+    if not index_path.exists():
+        return {"error": "Frontend build not found. Please run 'npm run build' in /node/frontend directory."}
+    return FileResponse(index_path)
