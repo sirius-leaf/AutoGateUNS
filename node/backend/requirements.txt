@@ -6,4 +6,8 @@ requests-toolbelt
 python-multipart
 pydantic
 pymodbus
-httpxpywebview
+httpx
+pywebview
+PyQt6
+PyQt6-WebEngine
+qtpy

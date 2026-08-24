@@ -30,7 +30,8 @@ def main():
         width=1024,
         height=768
     )
-    webview.start()
+    # Gunakan opsi gui='qt' karena PyQt6 lebih mudah diinstall via pip (menyediakan binary wheel)
+    webview.start(gui='qt')
 
 if __name__ == "__main__":
     main()
