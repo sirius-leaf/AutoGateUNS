@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=AutoGate UNS Pos Satpam
+Comment=Aplikasi Pos Satpam AutoGate UNS
+Exec=/home/leafs/Projects/Python/AutoGateUNS/node/backend/run.sh
+Path=/home/leafs/Projects/Python/AutoGateUNS/node/backend
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Utility;
