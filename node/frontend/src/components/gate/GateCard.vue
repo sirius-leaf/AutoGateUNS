@@ -32,6 +32,81 @@ let streamTimer = null
 
 // Settings modal removed - logic moved to SettingsView.vue
 
+const currentInterval = ref(1000)
+const currentOpenChannel = ref(1)
+const currentCloseChannel = ref(2)
+
+const streamUrl = computed(() => {
+  return `${api.baseUrl}/api/stream/${props.direction}?t=${cacheBuster.value}`
+})
+
+const startStreamTimer = (interval) => {
+  if (streamTimer) clearInterval(streamTimer)
+  streamTimer = setInterval(() => {
+    cacheBuster.value = Date.now()
+  }, interval)
+}
+
+const loadCameraInterval = async () => {
+  try {
+    const data = await api.getSettings()
+    const prefix = props.direction === 'masuk' ? 'CAMERA_IN' : 'CAMERA_OUT'
+    const block = props.direction === 'masuk' ? data.camera_in : data.camera_out
+    if (block) {
+      currentInterval.value = parseFloat(block[`${prefix}_INTERVAL`] || 1000)
+      currentOpenChannel.value = parseInt(block[`${prefix}_RELAY_OPEN`] || (props.direction === 'masuk' ? 1 : 4))
+      currentCloseChannel.value = parseInt(block[`${prefix}_RELAY_CLOSE`] || (props.direction === 'masuk' ? 2 : 5))
+    }
+  } catch (err) {
+    console.error('Failed to load camera settings', err)
+  }
+}
+
+const handleOpenGate = async () => {
+  relayLoading.value = true
+  relayError.value = ''
+  try {
+    await api.controlRelay(currentOpenChannel.value, true)
+    setTimeout(() => api.controlRelay(currentOpenChannel.value, false), 1000)
+  } catch (err) {
+    relayError.value = 'Gagal buka gate: ' + err.message
+  } finally {
+    relayLoading.value = false
+  }
+}
+
+const handleCloseGate = async () => {
+  relayLoading.value = true
+  relayError.value = ''
+  try {
+    await api.controlRelay(currentCloseChannel.value, true)
+    setTimeout(() => api.controlRelay(currentCloseChannel.value, false), 1000)
+  } catch (err) {
+    relayError.value = 'Gagal tutup gate: ' + err.message
+  } finally {
+    relayLoading.value = false
+  }
+}
+
+const handleCapture = async () => {
+  capturing.value = true
+  captureError.value = ''
+  captureSuccess.value = ''
+  try {
+    const res = await api.capturePlate(props.direction)
+    emit('capture', res)
+    if (res.ignored) {
+       captureError.value = res.reason
+    } else {
+       captureSuccess.value = 'Capture sukses'
+       emit('capture-response', res)
+    }
+  } catch (err) {
+    captureError.value = err.message || 'Capture gagal'
+  } finally {
+    capturing.value = false
+  }
+}
 const onStreamError = () => {
   streamError.value = true
   if (!streamSlowMode.value) {

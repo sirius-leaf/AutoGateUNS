@@ -192,10 +192,28 @@ def capture_plate(direction: str, channel: Optional[int] = None) -> CameraResult
     session.verify = False
 
     try:
-        resp = session.get(url, timeout=settings.CAMERA_TIMEOUT)
-        resp.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise CameraError(f"Gagal menghubungi kamera '{direction}' di {url}: {e}") from e
+        resp = None
+        last_error = None
+        for attempt in range(3):
+            try:
+                resp = session.get(url, timeout=settings.CAMERA_TIMEOUT)
+                resp.raise_for_status()
+                
+                content_type = resp.headers.get("Content-Type", "")
+                if "multipart" not in content_type:
+                    raise ValueError(f"Content-Type tidak dikenali dari kamera: {content_type}")
+                    
+                break  # Berhasil dan valid, keluar dari loop
+            except (requests.exceptions.RequestException, ValueError) as e:
+                last_error = e
+                import time
+                time.sleep(0.5)  # Tunggu sebentar sebelum retry
+        
+        if resp is None or "multipart" not in resp.headers.get("Content-Type", ""):
+            raise last_error
+            
+    except Exception as e:
+        raise CameraError(f"Gagal mengambil gambar dari kamera '{direction}' di {url} setelah 3 percobaan: {e}") from e
 
     parts = _parse_mnpr_multipart(resp)
 

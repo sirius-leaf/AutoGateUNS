@@ -84,7 +84,8 @@ def capture_and_save(direction: str, channel: Optional[int] = None) -> CaptureOu
     event_id = str(uuid.uuid4())
 
     # Untuk gate keluar: validasi ke server
-    if direction == "keluar":
+    mode = settings.VALIDATION_MODE
+    if direction == "keluar" and mode in ("plate_only", "both"):
         is_valid = _validate_plate_with_server(plate_number)
         if not is_valid:
             return CaptureOutcome(
@@ -147,7 +148,7 @@ def capture_and_save(direction: str, channel: Optional[int] = None) -> CaptureOu
         vehicle=vehicle,
         ignored=False,
         reason=None,
-        validated=True if direction == "keluar" else None,
+        validated=True if (direction == "keluar" and mode in ("plate_only", "both")) else None,
     )
 
 

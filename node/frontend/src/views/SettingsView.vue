@@ -16,6 +16,7 @@ const serverForm = ref({})
 const relayForm = ref({})
 const camInForm = ref({})
 const camOutForm = ref({})
+const nodeForm = ref({})
 
 const fetchSettings = async () => {
   loading.value = true
@@ -23,6 +24,7 @@ const fetchSettings = async () => {
     const data = await api.getSettings()
     serverForm.value = { ...data.server }
     relayForm.value = { ...data.relay }
+    nodeForm.value = { ...data.node }
     
     // Process interval to seconds for display
     const processCamData = (camData, prefix) => {
@@ -57,6 +59,7 @@ const handleSave = async (section) => {
     let updates = {}
     if (section === 'server') updates = { ...serverForm.value }
     if (section === 'relay') updates = { ...relayForm.value }
+    if (section === 'node') updates = { ...nodeForm.value }
     if (section === 'camera_in') {
       const secVal = parseFloat(camInForm.value.CAMERA_IN_INTERVAL)
       const msVal = isNaN(secVal) || secVal <= 0 ? 1000 : Math.round(secVal * 1000)
@@ -244,6 +247,43 @@ onMounted(fetchSettings)
             <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Relay Tutup</label>
             <input v-model="camOutForm.CAMERA_OUT_RELAY_CLOSE" type="number" min="1"
               class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Node Settings -->
+      <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-5 shadow-xl shadow-black/40">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <Settings class="w-4 h-4 text-purple-400" />
+            <h3 class="text-sm font-bold text-white">Identitas & Mode Node</h3>
+          </div>
+          <button @click="handleSave('node')" :disabled="saving"
+            class="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition disabled:opacity-50">
+            <Loader2 v-if="saving" class="w-3.5 h-3.5 animate-spin" />
+            <Save v-else class="w-3.5 h-3.5" />
+            Simpan
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Node ID</label>
+            <input v-model="nodeForm.NODE_ID" type="text"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-purple-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Nama Node</label>
+            <input v-model="nodeForm.NODE_NAME" type="text"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Mode Validasi</label>
+            <select v-model="nodeForm.VALIDATION_MODE"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500">
+              <option value="plate_only">Hanya Plat Nomor</option>
+              <option value="rfid_only">Hanya RFID</option>
+              <option value="both">Plat Nomor + RFID</option>
+            </select>
           </div>
         </div>
       </div>

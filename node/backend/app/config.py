@@ -169,6 +169,10 @@ class Settings:
         return int(_getenv("APP_PORT", "3000"))
 
 
+    @property
+    def VALIDATION_MODE(self) -> str:
+        return _getenv("VALIDATION_MODE", "plate_only")
+
 settings = Settings()
 
 # Pastikan folder storage ada

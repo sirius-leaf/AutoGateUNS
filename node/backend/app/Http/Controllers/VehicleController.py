@@ -49,10 +49,24 @@ def store(direction: str, payload: VehicleCaptureRequest, background_tasks: Back
     """
     outcome = VehicleService.capture_and_save(direction=direction, channel=payload.channel)
 
+    from app.config import settings
+    mode = settings.VALIDATION_MODE
+
+    if mode == "plate_only" and not outcome.ignored and outcome.vehicle is not None:
+        from app.Http.Controllers.RelayController import RelayController
+        open_ch = settings.CAMERA_IN_RELAY_OPEN if direction == "masuk" else settings.CAMERA_OUT_RELAY_OPEN
+        close_ch = settings.CAMERA_IN_RELAY_CLOSE if direction == "masuk" else settings.CAMERA_OUT_RELAY_CLOSE
+        background_tasks.add_task(
+            RelayController.open_and_close_delayed,
+            open_ch,
+            15,
+            close_ch
+        )
+
     return VehicleCaptureOut(
         ignored=outcome.ignored,
         reason=outcome.reason,
         validated=outcome.validated,
         vehicle=VehicleOut(**VehicleService.to_out_dict(outcome.vehicle)) if outcome.vehicle else None,
-        rfid_pending=not outcome.ignored and outcome.vehicle is not None,
+        rfid_pending=not outcome.ignored and outcome.vehicle is not None and mode != "plate_only",
     )

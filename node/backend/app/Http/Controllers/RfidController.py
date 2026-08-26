@@ -103,18 +103,27 @@ def handle_rfid(event_id: str, rfid_uid: str | None, background_tasks) -> dict:
 
     # Cek kecocokan RFID untuk keluar
     rfid_match = None
+    from app.config import settings
+    mode = settings.VALIDATION_MODE
+
     if vehicle.direction == "keluar" and rfid_uid:
         rfid_match = _check_rfid_match(vehicle.plate_number, rfid_uid)
+        
         if rfid_match is False:
             logger.warning(
                 f"RFID mismatch: plat '{vehicle.plate_number}' — "
                 f"RFID keluar '{rfid_uid}' berbeda dengan entry"
             )
+            if mode in ("rfid_only", "both"):
+                return {
+                    "success": False,
+                    "message": "Gate tidak dibuka. RFID tidak cocok dengan record masuk.",
+                    "rfid_match": False,
+                }
         elif rfid_match is True:
             logger.info(f"RFID match: plat '{vehicle.plate_number}' — RFID cocok")
 
     # Buka gate
-    from app.config import settings
     if vehicle.direction == "masuk":
         open_ch = settings.CAMERA_IN_RELAY_OPEN
         close_ch = settings.CAMERA_IN_RELAY_CLOSE

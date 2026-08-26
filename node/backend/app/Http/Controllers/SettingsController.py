@@ -41,6 +41,7 @@ EDITABLE_KEYS = {
     # Node Identity
     "NODE_ID",
     "NODE_NAME",
+    "VALIDATION_MODE",
 }
 
 
@@ -85,6 +86,7 @@ def get_settings() -> dict:
         "node": {
             "NODE_ID": env_values.get("NODE_ID", settings.NODE_ID),
             "NODE_NAME": env_values.get("NODE_NAME", settings.NODE_NAME),
+            "VALIDATION_MODE": env_values.get("VALIDATION_MODE", settings.VALIDATION_MODE),
         },
     }
 

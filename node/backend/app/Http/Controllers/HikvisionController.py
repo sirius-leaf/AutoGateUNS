@@ -302,7 +302,8 @@ async def handle_radar_event(request: Request, forced_direction: Optional[str] =
         )
 
     # ── 5. Validasi untuk gate keluar ──
-    if direction == "keluar":
+    mode = settings.VALIDATION_MODE
+    if direction == "keluar" and mode in ("plate_only", "both"):
         is_valid = _validate_plate(plate_number)
         if not is_valid:
             return VehicleCaptureOut(
@@ -362,14 +363,25 @@ async def handle_radar_event(request: Request, forced_direction: Optional[str] =
             (vehicle_id, json.dumps(sync_payload)),
         )
 
-    # ── 8. Jangan buka gate dulu — tunggu RFID ──
-    logger.info(f"Hikvision: {plate_number} ({direction}) disimpan, menunggu RFID")
+    # ── 8. Logika buka gate atau tunggu RFID ──
+    if mode == "plate_only":
+        from app.Http.Controllers.RelayController import RelayController
+        open_ch = settings.CAMERA_IN_RELAY_OPEN if direction == "masuk" else settings.CAMERA_OUT_RELAY_OPEN
+        close_ch = settings.CAMERA_IN_RELAY_CLOSE if direction == "masuk" else settings.CAMERA_OUT_RELAY_CLOSE
+        asyncio.create_task(
+            RelayController.open_and_close_delayed(open_ch, 15, close_ch)
+        )
+        logger.info(f"Hikvision: {plate_number} ({direction}) disimpan, gate dibuka (mode plate_only)")
+        rfid_pending = False
+    else:
+        logger.info(f"Hikvision: {plate_number} ({direction}) disimpan, menunggu RFID (mode {mode})")
+        rfid_pending = True
 
     return VehicleCaptureOut(
         ignored=False,
-        validated=True if direction == "keluar" else None,
+        validated=True if (direction == "keluar" and mode in ("plate_only", "both")) else None,
         vehicle=VehicleOut(**to_out_dict(vehicle)),
-        rfid_pending=True,
+        rfid_pending=rfid_pending,
     )
 
 
