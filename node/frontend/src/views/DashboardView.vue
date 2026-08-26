@@ -253,7 +253,13 @@ onUnmounted(() => {
                   <td class="py-2 px-3 font-mono font-bold text-white">{{ plate.plate_number }}</td>
                   <td class="py-2 px-3">
                     <span
-                      v-if="plate.rfid_uid"
+                      v-if="plate.rfid_uid === '-'"
+                      class="inline-flex items-center gap-1 font-mono text-[10px] text-zinc-400 bg-zinc-500/10 border border-zinc-500/20 px-1.5 py-0.5 rounded"
+                    >
+                      Tanpa RFID
+                    </span>
+                    <span
+                      v-else-if="plate.rfid_uid"
                       class="inline-flex items-center gap-1 font-mono text-[10px] text-violet-300 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded"
                     >
                       <Nfc class="w-3 h-3" />

@@ -237,15 +237,21 @@ onMounted(() => {
                 {{ item.plate_number }}
               </td>
               <td class="py-2.5 px-3">
-                <span
-                  v-if="item.rfid_uid"
-                  class="inline-flex items-center gap-1 font-mono text-[10px] text-violet-300 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded"
-                >
-                  <Nfc class="w-3 h-3" />
-                  {{ item.rfid_uid }}
-                </span>
-                <span v-else class="text-zinc-600">---</span>
-              </td>
+                    <span
+                      v-if="item.rfid_uid === '-'"
+                      class="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-400 bg-zinc-500/10 border border-zinc-500/20 px-2 py-1 rounded"
+                    >
+                      Tanpa RFID
+                    </span>
+                    <span
+                      v-else-if="item.rfid_uid"
+                      class="inline-flex items-center gap-1 font-mono text-[11px] text-violet-300 bg-violet-500/10 border border-violet-500/20 px-2 py-1 rounded"
+                    >
+                      <Nfc class="w-3 h-3" />
+                      {{ item.rfid_uid }}
+                    </span>
+                    <span v-else class="text-zinc-500 text-xs italic">---</span>
+                  </td>
               <td class="py-2.5 px-3 text-zinc-300">
                 {{ item.confidence ? `${item.confidence.toFixed(1)}%` : '---' }}
               </td>

@@ -105,10 +105,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           <div class="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
             <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">RFID</p>
             <div class="flex items-center gap-1 mt-0.5">
-              <Nfc v-if="plate.rfid_uid" class="w-3 h-3 text-violet-400" />
-              <p class="text-sm font-bold font-mono" :class="plate.rfid_uid ? 'text-violet-300' : 'text-zinc-600'">
-                {{ plate.rfid_uid || '---' }}
-              </p>
+              <span v-if="plate.rfid_uid === '-'" class="text-sm font-bold font-mono text-zinc-500">
+                Tanpa RFID
+              </span>
+              <template v-else-if="plate.rfid_uid">
+                <Nfc class="w-3 h-3 text-violet-400" />
+                <p class="text-sm font-bold font-mono text-violet-300">{{ plate.rfid_uid }}</p>
+              </template>
+              <p v-else class="text-sm font-bold font-mono text-zinc-600">---</p>
             </div>
           </div>
         </div>

@@ -52,7 +52,7 @@ const handleSubmit = async () => {
 }
 
 const handleLanjutkan = () => {
-  rfidInput.value = ''
+  rfidInput.value = '-'
   handleSubmit()
 }
 
@@ -64,8 +64,20 @@ const handleKeydown = (e) => {
   }
 }
 
+const validationMode = ref('plate_only')
+
 onMounted(async () => {
   document.addEventListener('keydown', handleKeydown, true) // capture phase
+  
+  try {
+    const data = await api.getSettings()
+    if (data && data.node && data.node.VALIDATION_MODE) {
+      validationMode.value = data.node.VALIDATION_MODE
+    }
+  } catch (err) {
+    console.error('Failed to get validation mode', err)
+  }
+  
   await nextTick()
   rfidRef.value?.focus()
 })
@@ -171,6 +183,7 @@ onUnmounted(() => {
           <!-- Buttons -->
           <div class="flex gap-3 pt-2">
             <button
+              v-if="validationMode === 'plate_only'"
               @click="handleLanjutkan"
               :disabled="submitting"
               class="flex-1 flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 font-semibold py-2.5 px-4 rounded-lg text-sm transition active:scale-[0.98] disabled:opacity-50"
