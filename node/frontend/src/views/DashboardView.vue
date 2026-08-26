@@ -243,8 +243,8 @@ onUnmounted(() => {
                   </td>
                   <td class="py-2 px-3">
                     <img
-                      v-if="plate.plate_image_url"
-                      :src="plate.plate_image_url"
+                      v-if="plate.scene_image_url"
+                      :src="plate.scene_image_url"
                       alt="Plat"
                       class="w-16 h-10 object-contain rounded border border-zinc-700 bg-zinc-950"
                     />

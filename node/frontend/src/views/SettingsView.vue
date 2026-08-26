@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import {
-  Settings, Server, Radio, Loader2, Check, AlertTriangle,
+  Settings, Server, Radio, Camera, Loader2, Check, AlertTriangle,
   Eye, EyeOff, Save,
 } from '@lucide/vue'
 import api from '@/services/api'
@@ -14,6 +14,8 @@ const showPasswords = ref({})
 
 const serverForm = ref({})
 const relayForm = ref({})
+const camInForm = ref({})
+const camOutForm = ref({})
 
 const fetchSettings = async () => {
   loading.value = true
@@ -21,6 +23,25 @@ const fetchSettings = async () => {
     const data = await api.getSettings()
     serverForm.value = { ...data.server }
     relayForm.value = { ...data.relay }
+    
+    // Process interval to seconds for display
+    const processCamData = (camData, prefix) => {
+      const data = { ...camData }
+      const key = `${prefix}_INTERVAL`
+      const openKey = `${prefix}_RELAY_OPEN`
+      const closeKey = `${prefix}_RELAY_CLOSE`
+      
+      const msVal = parseFloat(data[key] || 1000)
+      data[key] = (msVal / 1000).toString()
+      
+      if (!data[openKey]) data[openKey] = prefix === 'CAMERA_IN' ? '1' : '4'
+      if (!data[closeKey]) data[closeKey] = prefix === 'CAMERA_IN' ? '2' : '5'
+      return data
+    }
+    
+    camInForm.value = processCamData(data.camera_in, 'CAMERA_IN')
+    camOutForm.value = processCamData(data.camera_out, 'CAMERA_OUT')
+    
   } catch (err) {
     error.value = err.message
   } finally {
@@ -36,6 +57,16 @@ const handleSave = async (section) => {
     let updates = {}
     if (section === 'server') updates = { ...serverForm.value }
     if (section === 'relay') updates = { ...relayForm.value }
+    if (section === 'camera_in') {
+      const secVal = parseFloat(camInForm.value.CAMERA_IN_INTERVAL)
+      const msVal = isNaN(secVal) || secVal <= 0 ? 1000 : Math.round(secVal * 1000)
+      updates = { ...camInForm.value, CAMERA_IN_INTERVAL: msVal.toString() }
+    }
+    if (section === 'camera_out') {
+      const secVal = parseFloat(camOutForm.value.CAMERA_OUT_INTERVAL)
+      const msVal = isNaN(secVal) || secVal <= 0 ? 1000 : Math.round(secVal * 1000)
+      updates = { ...camOutForm.value, CAMERA_OUT_INTERVAL: msVal.toString() }
+    }
 
     const result = await api.updateSettings(updates)
     success.value = result.message || 'Berhasil disimpan'
@@ -61,7 +92,7 @@ onMounted(fetchSettings)
         <Settings class="w-5 h-5 text-zinc-400" />
         Pengaturan Node
       </h2>
-      <p class="text-xs text-zinc-400 mt-1">Konfigurasi server dan relay. Kamera diatur dari masing-masing gate card.</p>
+      <p class="text-xs text-zinc-400 mt-1">Konfigurasi server, relay, dan kamera.</p>
     </div>
 
     <!-- Notifications -->
@@ -79,6 +110,144 @@ onMounted(fetchSettings)
     </div>
 
     <template v-else>
+      <!-- Kamera Masuk -->
+      <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-5 shadow-xl shadow-black/40">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <Camera class="w-4 h-4 text-blue-400" />
+            <h3 class="text-sm font-bold text-white">Kamera Masuk</h3>
+          </div>
+          <button @click="handleSave('camera_in')" :disabled="saving"
+            class="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition disabled:opacity-50">
+            <Loader2 v-if="saving" class="w-3.5 h-3.5 animate-spin" />
+            <Save v-else class="w-3.5 h-3.5" />
+            Simpan
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">IP Camera</label>
+            <input v-model="camInForm.CAMERA_IN_HOST" type="text"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Username</label>
+            <input v-model="camInForm.CAMERA_IN_USER" type="text"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Password</label>
+            <div class="relative">
+              <input v-model="camInForm.CAMERA_IN_PASSWORD"
+                :type="showPasswords.CAMERA_IN_PASSWORD ? 'text' : 'password'"
+                class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 pr-10 text-sm text-white focus:outline-none focus:border-blue-500" />
+              <button type="button" @click="togglePassword('CAMERA_IN_PASSWORD')" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
+                <Eye v-if="!showPasswords.CAMERA_IN_PASSWORD" class="w-4 h-4" />
+                <EyeOff v-else class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Kamera</label>
+            <input v-model="camInForm.CAMERA_IN_CHANNEL" type="number"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">HTTPS</label>
+            <select v-model="camInForm.CAMERA_IN_USE_HTTPS"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              <option value="false">Tidak</option>
+              <option value="true">Ya</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Interval Live Feed (detik)</label>
+            <input v-model="camInForm.CAMERA_IN_INTERVAL" type="number" step="0.1" min="0.1"
+              placeholder="1.0"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Relay Buka</label>
+            <input v-model="camInForm.CAMERA_IN_RELAY_OPEN" type="number" min="1"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Relay Tutup</label>
+            <input v-model="camInForm.CAMERA_IN_RELAY_CLOSE" type="number" min="1"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Kamera Keluar -->
+      <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-5 shadow-xl shadow-black/40">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <Camera class="w-4 h-4 text-emerald-400" />
+            <h3 class="text-sm font-bold text-white">Kamera Keluar</h3>
+          </div>
+          <button @click="handleSave('camera_out')" :disabled="saving"
+            class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition disabled:opacity-50">
+            <Loader2 v-if="saving" class="w-3.5 h-3.5 animate-spin" />
+            <Save v-else class="w-3.5 h-3.5" />
+            Simpan
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">IP Camera</label>
+            <input v-model="camOutForm.CAMERA_OUT_HOST" type="text"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Username</label>
+            <input v-model="camOutForm.CAMERA_OUT_USER" type="text"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Password</label>
+            <div class="relative">
+              <input v-model="camOutForm.CAMERA_OUT_PASSWORD"
+                :type="showPasswords.CAMERA_OUT_PASSWORD ? 'text' : 'password'"
+                class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 pr-10 text-sm text-white focus:outline-none focus:border-blue-500" />
+              <button type="button" @click="togglePassword('CAMERA_OUT_PASSWORD')" class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300">
+                <Eye v-if="!showPasswords.CAMERA_OUT_PASSWORD" class="w-4 h-4" />
+                <EyeOff v-else class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Kamera</label>
+            <input v-model="camOutForm.CAMERA_OUT_CHANNEL" type="number"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">HTTPS</label>
+            <select v-model="camOutForm.CAMERA_OUT_USE_HTTPS"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+              <option value="false">Tidak</option>
+              <option value="true">Ya</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Interval Live Feed (detik)</label>
+            <input v-model="camOutForm.CAMERA_OUT_INTERVAL" type="number" step="0.1" min="0.1"
+              placeholder="1.0"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Relay Buka</label>
+            <input v-model="camOutForm.CAMERA_OUT_RELAY_OPEN" type="number" min="1"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-zinc-500 font-medium mb-1">Channel Relay Tutup</label>
+            <input v-model="camOutForm.CAMERA_OUT_RELAY_CLOSE" type="number" min="1"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" />
+          </div>
+        </div>
+      </div>
+
       <!-- Server Sync -->
       <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-5 shadow-xl shadow-black/40">
         <div class="flex items-center justify-between mb-4">
@@ -149,3 +318,4 @@ onMounted(fetchSettings)
     </template>
   </div>
 </template>
+

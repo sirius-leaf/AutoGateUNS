@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { X, Car, ExternalLink, Nfc } from '@lucide/vue'
 
 const props = defineProps({
@@ -20,8 +20,24 @@ const handleClose = () => {
   emit('close')
 }
 
+const previewImage = ref(null)
+
+const handlePreview = (url) => {
+  if (url) previewImage.value = url
+}
+
+const closePreview = () => {
+  previewImage.value = null
+}
+
 const onKeydown = (e) => {
-  if (e.key === 'Escape') handleClose()
+  if (e.key === 'Escape') {
+    if (previewImage.value) {
+      closePreview()
+    } else {
+      handleClose()
+    }
+  }
 }
 
 onMounted(() => window.addEventListener('keydown', onKeydown))
@@ -104,7 +120,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             <img
               :src="plate.plate_image_url"
               alt="Plat Nomor"
-              class="w-full h-auto object-contain max-h-48"
+              class="w-full h-auto object-contain max-h-48 cursor-zoom-in hover:opacity-90 transition"
+              @click="handlePreview(plate.plate_image_url)"
             />
           </div>
         </div>
@@ -116,7 +133,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             <img
               :src="plate.scene_image_url"
               alt="Kendaraan"
-              class="w-full h-auto object-contain max-h-80"
+              class="w-full h-auto object-contain max-h-80 cursor-zoom-in hover:opacity-90 transition"
+              @click="handlePreview(plate.scene_image_url)"
             />
           </div>
         </div>
@@ -136,6 +154,26 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           Tutup
         </button>
       </div>
+    </div>
+
+    <!-- Image Preview Modal Overlay -->
+    <div
+      v-if="previewImage"
+      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-zoom-out"
+      @click="closePreview"
+    >
+      <img
+        :src="previewImage"
+        alt="Preview"
+        class="max-w-full max-h-full object-contain"
+      />
+      <button
+        @click.stop="closePreview"
+        class="absolute top-4 right-4 p-2 bg-zinc-800/50 hover:bg-zinc-700/80 rounded-full text-white transition"
+        title="Tutup Preview"
+      >
+        <X class="w-6 h-6" />
+      </button>
     </div>
   </div>
 </template>

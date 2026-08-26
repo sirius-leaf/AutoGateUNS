@@ -226,8 +226,8 @@ onMounted(() => {
               </td>
               <td class="py-2.5 px-3">
                 <img
-                  v-if="item.plate_image_url"
-                  :src="item.plate_image_url"
+                  v-if="item.scene_image_url"
+                  :src="item.scene_image_url"
                   alt="Plat"
                   class="w-16 h-10 object-contain rounded border border-zinc-700 bg-zinc-950"
                 />
