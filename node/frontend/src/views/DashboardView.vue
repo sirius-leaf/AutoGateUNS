@@ -125,6 +125,16 @@ const handleRfidDone = ({ rfid_match }) => {
   // Bisa tambahkan notifikasi jika rfid_match === false
 }
 
+const nodeStatus = ref(null)
+
+const fetchStatus = async () => {
+  try {
+    nodeStatus.value = await api.getStatus()
+  } catch (err) {
+    nodeStatus.value = null
+  }
+}
+
 const handleRfidClose = () => {
   pendingRfid.value = null
   fetchRecentPlates()
@@ -132,8 +142,12 @@ const handleRfidClose = () => {
 
 onMounted(() => {
   fetchRecentPlates()
+  fetchStatus()
   // Polling utama: 15 detik
-  refreshTimer = setInterval(fetchRecentPlates, 15000)
+  refreshTimer = setInterval(() => {
+    fetchRecentPlates()
+    fetchStatus()
+  }, 15000)
 })
 
 onUnmounted(() => {
@@ -184,6 +198,7 @@ onUnmounted(() => {
             :key="gate.id"
             :gate="gate"
             :direction="gate.direction"
+            :node-status="nodeStatus"
             @capture="handleCapture"
             @refresh="handleRefresh"
             @capture-response="handleCaptureResponse"

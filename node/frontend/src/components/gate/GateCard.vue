@@ -15,6 +15,10 @@ const props = defineProps({
     type: String,
     required: true, // "masuk" atau "keluar"
   },
+  nodeStatus: {
+    type: Object,
+    default: null,
+  }
 })
 
 const emit = defineEmits(['capture', 'refresh', 'capture-response'])
@@ -38,6 +42,11 @@ const currentCloseChannel = ref(2)
 
 const streamUrl = computed(() => {
   return `${api.baseUrl}/api/stream/${props.direction}?t=${cacheBuster.value}`
+})
+
+const cameraActive = computed(() => {
+  if (!props.nodeStatus) return false;
+  return props.direction === 'masuk' ? props.nodeStatus.camera_in_active : props.nodeStatus.camera_out_active;
 })
 
 const startStreamTimer = (interval) => {
@@ -134,7 +143,19 @@ onUnmounted(() => { if (streamTimer) clearInterval(streamTimer) })
   <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-5 shadow-xl shadow-black/40 hover:border-zinc-700/80 transition-all">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-xl font-bold text-white tracking-tight">{{ gate.title }}</h3>
+      <div class="flex items-center gap-3">
+        <h3 class="text-xl font-bold text-white tracking-tight">{{ gate.title }}</h3>
+        
+        <!-- Camera Status Indicator -->
+        <div v-if="nodeStatus" 
+             class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-950 border border-zinc-800/80" 
+             :title="cameraActive ? 'Kamera Terhubung' : 'Kamera Terputus'">
+          <span :class="['w-2 h-2 rounded-full shrink-0', cameraActive ? 'bg-emerald-400' : 'bg-red-400']"></span>
+          <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+            {{ cameraActive ? 'Online' : 'Offline' }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- Camera Preview (Full Width) -->

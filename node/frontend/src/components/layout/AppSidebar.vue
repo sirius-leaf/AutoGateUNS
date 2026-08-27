@@ -24,10 +24,8 @@ const props = defineProps({
 
 const emit = defineEmits(['navigate', 'toggle'])
 
-const nodeStatus = ref(null)
 const currentTime = ref('')
 let timer = null
-let statusTimer = null
 
 const updateTime = () => {
   const now = new Date()
@@ -36,24 +34,13 @@ const updateTime = () => {
   currentTime.value = `${dateStr} - ${timeStr}`
 }
 
-const fetchStatus = async () => {
-  try {
-    nodeStatus.value = await api.getStatus()
-  } catch (err) {
-    nodeStatus.value = null
-  }
-}
-
 onMounted(() => {
   updateTime()
   timer = setInterval(updateTime, 1000)
-  fetchStatus()
-  statusTimer = setInterval(fetchStatus, 15000)
 })
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
-  if (statusTimer) clearInterval(statusTimer)
 })
 
 const navItems = [
@@ -130,20 +117,7 @@ const navItems = [
 
     <!-- Bottom Section: Status & Clock -->
     <div class="p-3 border-t border-zinc-800/60 space-y-2">
-      <!-- Camera Status -->
-      <div v-if="nodeStatus" :class="['bg-zinc-900 border border-zinc-800/80 rounded-lg p-2 text-xs', collapsed ? 'text-center' : '']">
-        <div v-if="!collapsed" class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Status Kamera</div>
-        <div :class="['flex items-center gap-2', collapsed ? 'flex-col gap-1.5 justify-center' : 'justify-between']">
-          <div class="flex items-center gap-1.5" :title="nodeStatus.camera_in_active ? 'Kamera Masuk Aktif' : 'Kamera Masuk Nonaktif'">
-            <span :class="['w-2 h-2 rounded-full shrink-0', nodeStatus.camera_in_active ? 'bg-emerald-400' : 'bg-red-400']"></span>
-            <span v-if="!collapsed" class="text-[11px] text-zinc-400">Cam In</span>
-          </div>
-          <div class="flex items-center gap-1.5" :title="nodeStatus.camera_out_active ? 'Kamera Keluar Aktif' : 'Kamera Keluar Nonaktif'">
-            <span :class="['w-2 h-2 rounded-full shrink-0', nodeStatus.camera_out_active ? 'bg-emerald-400' : 'bg-red-400']"></span>
-            <span v-if="!collapsed" class="text-[11px] text-zinc-400">Cam Out</span>
-          </div>
-        </div>
-      </div>
+      <!-- Camera Status Removed -->
 
       <!-- Time Clock -->
       <div v-if="!collapsed" class="px-2 py-1 text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
