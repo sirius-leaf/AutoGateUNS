@@ -11,7 +11,6 @@ class VehicleOwnerCreateRequest(BaseModel):
     owner_name: str
     owner_address: Optional[str] = None
     owner_phone: Optional[str] = None
-    notes: Optional[str] = None
 
 
 class VehicleOwnerUpdateRequest(BaseModel):
@@ -19,7 +18,6 @@ class VehicleOwnerUpdateRequest(BaseModel):
     owner_name: Optional[str] = None
     owner_address: Optional[str] = None
     owner_phone: Optional[str] = None
-    notes: Optional[str] = None
 
 
 class VehicleOwnerOut(BaseModel):
@@ -28,7 +26,6 @@ class VehicleOwnerOut(BaseModel):
     owner_name: str
     owner_address: Optional[str] = None
     owner_phone: Optional[str] = None
-    notes: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 

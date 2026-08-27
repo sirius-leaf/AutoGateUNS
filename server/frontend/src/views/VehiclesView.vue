@@ -20,6 +20,9 @@ const vehicleTypes = ref([])
 const form = ref({
   vehicle_type: '',
   cc: null,
+  owner_name: '',
+  owner_address: '',
+  owner_phone: '',
 })
 
 const fetchVehicles = async () => {
@@ -68,6 +71,9 @@ const openEdit = (v) => {
   form.value = {
     vehicle_type: v.vehicle_type || '',
     cc: v.cc ?? null,
+    owner_name: v.owner_name || '',
+    owner_address: v.owner_address || '',
+    owner_phone: v.owner_phone || '',
   }
   error.value = ''
   showModal.value = true
@@ -90,6 +96,15 @@ const handleSave = async () => {
     }
     if (form.value.cc !== (editingVehicle.value.cc ?? null)) {
       payload.cc = form.value.cc
+    }
+    if (form.value.owner_name !== (editingVehicle.value.owner_name || '')) {
+      payload.owner_name = form.value.owner_name
+    }
+    if (form.value.owner_address !== (editingVehicle.value.owner_address || '')) {
+      payload.owner_address = form.value.owner_address
+    }
+    if (form.value.owner_phone !== (editingVehicle.value.owner_phone || '')) {
+      payload.owner_phone = form.value.owner_phone
     }
     if (Object.keys(payload).length === 0) {
       closeModal()
@@ -265,6 +280,25 @@ onMounted(fetchVehicles)
               placeholder="misal: 1500"
               class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
             />
+          </div>
+          
+          <div class="border-t border-zinc-800 my-2 pt-2">
+             <h4 class="text-sm font-bold text-white mb-2">Data Pemilik</h4>
+             
+             <div class="space-y-3">
+               <div>
+                 <label class="block text-xs font-medium text-zinc-400 mb-1">Nama Pemilik</label>
+                 <input v-model="form.owner_name" type="text" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+               </div>
+               <div>
+                 <label class="block text-xs font-medium text-zinc-400 mb-1">Alamat</label>
+                 <input v-model="form.owner_address" type="text" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+               </div>
+               <div>
+                 <label class="block text-xs font-medium text-zinc-400 mb-1">Telepon</label>
+                 <input v-model="form.owner_phone" type="text" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+               </div>
+             </div>
           </div>
 
           <div v-if="error" class="flex items-start gap-2 bg-red-950/80 border border-red-800/60 rounded-lg px-3 py-2">

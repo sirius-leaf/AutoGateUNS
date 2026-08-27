@@ -22,7 +22,6 @@ def _to_out(owner: VehicleOwner) -> VehicleOwnerOut:
         owner_name=owner.owner_name,
         owner_address=owner.owner_address,
         owner_phone=owner.owner_phone,
-        notes=owner.notes,
         created_at=owner.created_at.isoformat() if owner.created_at else None,
         updated_at=owner.updated_at.isoformat() if owner.updated_at else None,
     )
@@ -59,7 +58,6 @@ def create_owner(db: Session, request: VehicleOwnerCreateRequest) -> VehicleOwne
         owner_name=request.owner_name,
         owner_address=request.owner_address,
         owner_phone=request.owner_phone,
-        notes=request.notes,
     )
     db.add(owner)
     db.flush()
@@ -113,8 +111,6 @@ def update_owner(db: Session, owner_id: int, request: VehicleOwnerUpdateRequest)
         owner.owner_address = request.owner_address
     if request.owner_phone is not None:
         owner.owner_phone = request.owner_phone
-    if request.notes is not None:
-        owner.notes = request.notes
 
     db.commit()
     db.refresh(owner)

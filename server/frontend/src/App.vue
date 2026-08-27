@@ -6,7 +6,6 @@ import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import UsersView from '@/views/UsersView.vue'
 import NodesView from '@/views/NodesView.vue'
-import VehicleOwnersView from '@/views/VehicleOwnersView.vue'
 import VehiclesView from '@/views/VehiclesView.vue'
 import VehicleTypesView from '@/views/VehicleTypesView.vue'
 import HistoryView from '@/views/HistoryView.vue'
@@ -23,7 +22,6 @@ const views = {
   dashboard: DashboardView,
   users: UsersView,
   nodes: NodesView,
-  'vehicle-owners': VehicleOwnersView,
   'vehicle-types': VehicleTypesView,
   vehicles: VehiclesView,
   history: HistoryView,

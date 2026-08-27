@@ -33,6 +33,8 @@ def search_vehicles(db: Session, q: str = "", limit: int = 20) -> list[dict]:
             "cc": v.cc,
             "owner_id": v.owner_id,
             "owner_name": v.owner.owner_name if v.owner else None,
+            "owner_address": v.owner.owner_address if v.owner else None,
+            "owner_phone": v.owner.owner_phone if v.owner else None,
         }
         for v in items
     ]
@@ -59,6 +61,8 @@ def list_vehicles(db: Session, q: str = "", skip: int = 0, limit: int = 50) -> d
                 "cc": v.cc,
                 "owner_id": v.owner_id,
                 "owner_name": v.owner.owner_name if v.owner else None,
+                "owner_address": v.owner.owner_address if v.owner else None,
+                "owner_phone": v.owner.owner_phone if v.owner else None,
                 "created_at": v.created_at.isoformat() if v.created_at else None,
             }
             for v in items
@@ -106,6 +110,40 @@ def update_vehicle(db: Session, vehicle_id: int, request: VehicleUpdateRequest) 
     if request.cc is not None:
         vehicle.cc = request.cc
 
+    from app.Models.VehicleOwner import VehicleOwner
+    if request.owner_name is not None or request.owner_address is not None or request.owner_phone is not None:
+        if vehicle.owner_id:
+            owner = db.query(VehicleOwner).filter(VehicleOwner.id == vehicle.owner_id).first()
+            if owner:
+                if request.owner_name is not None:
+                    owner.owner_name = request.owner_name
+                if request.owner_address is not None:
+                    owner.owner_address = request.owner_address
+                if request.owner_phone is not None:
+                    owner.owner_phone = request.owner_phone
+        else:
+            # Create new owner if owner_name is provided
+            if request.owner_name:
+                # check if plate exists in owner first
+                owner = db.query(VehicleOwner).filter(VehicleOwner.plate_number == vehicle.plate_number).first()
+                if not owner:
+                    owner = VehicleOwner(
+                        plate_number=vehicle.plate_number,
+                        owner_name=request.owner_name,
+                        owner_address=request.owner_address,
+                        owner_phone=request.owner_phone
+                    )
+                    db.add(owner)
+                    db.flush()
+                else:
+                    owner.owner_name = request.owner_name
+                    if request.owner_address is not None:
+                        owner.owner_address = request.owner_address
+                    if request.owner_phone is not None:
+                        owner.owner_phone = request.owner_phone
+                
+                vehicle.owner_id = owner.id
+
     db.commit()
     db.refresh(vehicle)
 
@@ -116,6 +154,8 @@ def update_vehicle(db: Session, vehicle_id: int, request: VehicleUpdateRequest) 
         "cc": vehicle.cc,
         "owner_id": vehicle.owner_id,
         "owner_name": vehicle.owner.owner_name if vehicle.owner else None,
+        "owner_address": vehicle.owner.owner_address if vehicle.owner else None,
+        "owner_phone": vehicle.owner.owner_phone if vehicle.owner else None,
         "updated_at": vehicle.updated_at.isoformat() if vehicle.updated_at else None,
     }
 

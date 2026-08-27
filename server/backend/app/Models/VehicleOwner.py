@@ -15,6 +15,6 @@ class VehicleOwner(Base):
     owner_name = Column(String(100), nullable=False)
     owner_address = Column(String(255), nullable=True)
     owner_phone = Column(String(20), nullable=True)
-    notes = Column(String(255), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

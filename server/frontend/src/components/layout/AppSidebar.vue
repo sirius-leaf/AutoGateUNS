@@ -32,7 +32,6 @@ const navItems = computed(() => {
     { id: 'history', label: 'Riwayat Kendaraan', icon: History, show: false },
     { id: 'events', label: 'Event Kendaraan', icon: List, show: true },
     { id: 'vehicles', label: 'Kendaraan', icon: CarFront, show: isAdmin.value },
-    { id: 'vehicle-owners', label: 'Pemilik Kendaraan', icon: Car, show: isAdmin.value },
     { id: 'vehicle-types', label: 'Tipe Kendaraan', icon: Tag, show: isAdmin.value },
     { id: 'nodes', label: 'Kelola Node', icon: Radio, show: isAdmin.value },
     { id: 'users', label: 'Kelola User', icon: Users, show: isSuperAdmin.value },
