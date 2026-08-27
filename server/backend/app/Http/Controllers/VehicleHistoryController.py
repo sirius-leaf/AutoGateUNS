@@ -19,7 +19,7 @@ from app.Http.Requests.VehicleHistoryRequest import (
 from app.config import settings
 
 
-def _to_event_out(event: VehicleEvent) -> VehicleEventOut:
+def _to_event_out(event: VehicleEvent, node_name: Optional[str] = None) -> VehicleEventOut:
     def _img_url(path):
         if not path:
             return None
@@ -30,6 +30,7 @@ def _to_event_out(event: VehicleEvent) -> VehicleEventOut:
         id=event.id,
         event_id=event.event_id,
         node_id=event.node_id,
+        node_name=node_name,
         plate_number=event.plate_number,
         direction=event.direction,
         plate_image_url=_img_url(event.plate_image_path),
@@ -81,7 +82,17 @@ def list_events(
     query = query.order_by(VehicleEvent.created_at.desc())
     total = query.count()
     items = query.offset(skip).limit(limit).all()
-    return VehicleEventListOut(total=total, items=[_to_event_out(e) for e in items])
+
+    node_cache = {}
+    result = []
+    for e in items:
+        if e.node_id not in node_cache:
+            node = db.query(Node).filter(Node.id == e.node_id).first()
+            node_cache[e.node_id] = node.name if node else e.node_id
+        
+        result.append(_to_event_out(e, node_name=node_cache[e.node_id]))
+
+    return VehicleEventListOut(total=total, items=result)
 
 
 def list_history(

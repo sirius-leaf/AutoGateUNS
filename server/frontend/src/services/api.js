@@ -50,8 +50,8 @@ class ApiClient {
       if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: response.statusText }))
 
-        // Hanya auto-logout jika 401 dari endpoint auth (bukan dari polling)
-        if (response.status === 401 && path === '/api/auth/me') {
+        // Auto-logout jika 401 (token expired/invalid), kecuali saat mencoba login
+        if (response.status === 401 && path !== '/api/auth/login') {
           this.clearToken()
           window.location.reload()
           throw new Error('Sesi berakhir, silakan login kembali')

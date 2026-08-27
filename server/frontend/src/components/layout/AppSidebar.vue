@@ -29,7 +29,7 @@ const isSuperAdmin = computed(() => props.user?.role === 'super_admin')
 const navItems = computed(() => {
   const items = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, show: true },
-    { id: 'history', label: 'Riwayat Kendaraan', icon: History, show: true },
+    { id: 'history', label: 'Riwayat Kendaraan', icon: History, show: false },
     { id: 'events', label: 'Event Kendaraan', icon: List, show: true },
     { id: 'vehicles', label: 'Kendaraan', icon: CarFront, show: isAdmin.value },
     { id: 'vehicle-owners', label: 'Pemilik Kendaraan', icon: Car, show: isAdmin.value },

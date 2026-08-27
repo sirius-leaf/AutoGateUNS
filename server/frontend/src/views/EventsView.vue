@@ -137,7 +137,7 @@ onMounted(fetchEvents)
                   <ArrowUpRight class="w-3 h-3" /> Keluar
                 </span>
               </td>
-              <td class="py-3 px-4 text-zinc-400 font-mono text-[10px]">{{ e.node_id }}</td>
+              <td class="py-3 px-4 text-zinc-400 font-mono text-[10px]">{{ e.node_name || e.node_id }}</td>
               <td class="py-3 px-4">
                 <span
                   v-if="e.rfid_uid"

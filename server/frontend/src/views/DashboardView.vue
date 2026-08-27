@@ -24,7 +24,7 @@ const fetchData = async () => {
   try {
     const [summaryData, historyData] = await Promise.all([
       api.getDashboardSummary(),
-      api.getHistory({ limit: 10 }),
+      api.getEvents({ limit: 10 }),
     ])
     summary.value = summaryData
     recentHistory.value = historyData.items || []
@@ -123,7 +123,7 @@ onUnmounted(() => { if (refreshTimer) clearInterval(refreshTimer) })
               Riwayat Terbaru
             </h3>
             <button
-              @click="emit('navigate', 'history')"
+              @click="emit('navigate', 'events')"
               class="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 hover:bg-zinc-800/60 px-2.5 py-1 rounded-lg transition border border-transparent hover:border-zinc-700/60"
             >
               <span>Lihat Semua</span>
@@ -135,10 +135,9 @@ onUnmounted(() => { if (refreshTimer) clearInterval(refreshTimer) })
               <thead>
                 <tr class="border-b border-zinc-800">
                   <th class="text-left py-2 px-3 text-zinc-500 font-medium">Plat</th>
-                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Masuk</th>
-                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Keluar</th>
-                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Status</th>
-                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Pemilik</th>
+                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Waktu</th>
+                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Node</th>
+                  <th class="text-left py-2 px-3 text-zinc-500 font-medium">Arah</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,29 +148,26 @@ onUnmounted(() => { if (refreshTimer) clearInterval(refreshTimer) })
                 >
                   <td class="py-2 px-3 font-mono font-bold text-white">{{ h.plate_number }}</td>
                   <td class="py-2 px-3 text-zinc-300">
-                    <div class="text-[10px] text-zinc-500">{{ h.entry_node_name || '---' }}</div>
-                    <div>{{ formatTime(h.entry_at) }}</div>
+                    <div>{{ formatTime(h.captured_at || h.created_at) }}</div>
                   </td>
                   <td class="py-2 px-3 text-zinc-300">
-                    <div class="text-[10px] text-zinc-500">{{ h.exit_node_name || '---' }}</div>
-                    <div>{{ formatTime(h.exit_at) }}</div>
+                    <div>{{ h.node_name || h.node_id || '---' }}</div>
                   </td>
                   <td class="py-2 px-3">
                     <span
                       :class="[
                         'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
-                        h.is_inside
+                        h.direction === 'masuk'
                           ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
                       ]"
                     >
-                      {{ h.is_inside ? 'Di Dalam' : 'Keluar' }}
+                      {{ h.direction === 'masuk' ? 'Masuk' : (h.direction === 'keluar' ? 'Keluar' : h.direction) }}
                     </span>
                   </td>
-                  <td class="py-2 px-3 text-zinc-400">{{ h.owner_name || '---' }}</td>
                 </tr>
                 <tr v-if="!recentHistory.length">
-                  <td colspan="5" class="py-4 text-center text-zinc-500">Belum ada data</td>
+                  <td colspan="4" class="py-4 text-center text-zinc-500">Belum ada data</td>
                 </tr>
               </tbody>
             </table>

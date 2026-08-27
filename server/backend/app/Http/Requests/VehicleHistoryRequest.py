@@ -12,6 +12,7 @@ class VehicleEventOut(BaseModel):
     id: int
     event_id: str
     node_id: str
+    node_name: Optional[str] = None
     plate_number: str
     direction: Direction
     plate_image_url: Optional[str] = None
