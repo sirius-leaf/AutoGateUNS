@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   Copy, Check, ChevronsLeft, Square, Camera, Loader2, AlertTriangle,
-  X, ShieldCheck, ShieldX, Settings, Save, Eye, EyeOff,
+  X, ShieldCheck, ShieldX, Settings, Save, Eye, EyeOff, RefreshCw
 } from '@lucide/vue'
 import api from '@/services/api'
 
@@ -45,8 +45,12 @@ const streamUrl = computed(() => {
 })
 
 const cameraActive = computed(() => {
-  if (!props.nodeStatus) return false;
-  return props.direction === 'masuk' ? props.nodeStatus.camera_in_active : props.nodeStatus.camera_out_active;
+  if (streamError.value) return false;
+  if (props.nodeStatus) {
+    const activeInDb = props.direction === 'masuk' ? props.nodeStatus.camera_in_active : props.nodeStatus.camera_out_active;
+    if (activeInDb) return true;
+  }
+  return !streamError.value;
 })
 
 const startStreamTimer = (interval) => {
@@ -132,6 +136,17 @@ const onStreamLoad = () => {
   }
 }
 
+const refreshingStream = ref(false)
+
+const handleRefreshStream = () => {
+  refreshingStream.value = true
+  streamError.value = false
+  cacheBuster.value = Date.now()
+  setTimeout(() => {
+    refreshingStream.value = false
+  }, 600)
+}
+
 onMounted(async () => {
   startStreamTimer(currentInterval.value)
   await loadCameraInterval()
@@ -147,8 +162,7 @@ onUnmounted(() => { if (streamTimer) clearInterval(streamTimer) })
         <h3 class="text-xl font-bold text-white tracking-tight">{{ gate.title }}</h3>
         
         <!-- Camera Status Indicator -->
-        <div v-if="nodeStatus" 
-             class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-950 border border-zinc-800/80" 
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-950 border border-zinc-800/80" 
              :title="cameraActive ? 'Kamera Terhubung' : 'Kamera Terputus'">
           <span :class="['w-2 h-2 rounded-full shrink-0', cameraActive ? 'bg-emerald-400' : 'bg-red-400']"></span>
           <span class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
@@ -156,6 +170,15 @@ onUnmounted(() => { if (streamTimer) clearInterval(streamTimer) })
           </span>
         </div>
       </div>
+
+      <!-- Quick Refresh Button -->
+      <button 
+        @click="handleRefreshStream" 
+        class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-950 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-400 hover:text-zinc-200 text-xs transition active:scale-95 shadow-sm"
+        title="Refresh Kamera">
+        <RefreshCw :class="['w-3.5 h-3.5', refreshingStream ? 'animate-spin' : '']" />
+        <span class="hidden sm:inline">Refresh Kamera</span>
+      </button>
     </div>
 
     <!-- Camera Preview (Full Width) -->
@@ -172,11 +195,26 @@ onUnmounted(() => { if (streamTimer) clearInterval(streamTimer) })
         <div v-else class="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-950 to-black flex flex-col items-center justify-center p-6 text-center">
           <Camera class="w-12 h-12 text-zinc-700 mb-2" />
           <p class="text-xs font-medium text-zinc-500">Kamera Tidak Terhubung</p>
-          <p class="text-[10px] text-zinc-600 mt-2">Mencoba lagi otomatis...</p>
+          <p class="text-[10px] text-zinc-600 mt-1 mb-3">Mencoba lagi otomatis...</p>
+          <button 
+            @click="handleRefreshStream"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium border border-zinc-700/80 shadow-md transition active:scale-95">
+            <RefreshCw :class="['w-3.5 h-3.5', refreshingStream ? 'animate-spin' : '']" />
+            <span>Coba Lagi / Refresh</span>
+          </button>
         </div>
 
         <div class="absolute top-3 left-3 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded text-[11px] font-mono text-zinc-200 border border-white/10 z-10">
           {{ gate.timestamp || '--' }}
+        </div>
+
+        <div v-if="!streamError" class="absolute top-3 right-3 z-10">
+          <button 
+            @click="handleRefreshStream"
+            class="bg-black/75 hover:bg-black/90 backdrop-blur-md p-1.5 rounded text-zinc-300 hover:text-white border border-white/10 shadow transition active:scale-95"
+            title="Muat ulang stream kamera">
+            <RefreshCw :class="['w-3.5 h-3.5', refreshingStream ? 'animate-spin' : '']" />
+          </button>
         </div>
       </div>
     </div>

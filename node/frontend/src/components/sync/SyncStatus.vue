@@ -70,7 +70,7 @@ onUnmounted(() => {
         ]"
       ></span>
       <span class="text-xs font-medium" :class="syncStatus.server_online ? 'text-emerald-400' : 'text-red-400'">
-        {{ syncStatus.server_online ? 'Server Online' : 'Server Offline' }}
+        {{ syncStatus.server_online ? 'Server Pusat Online' : 'Server Pusat Offline' }}
       </span>
     </div>
 
