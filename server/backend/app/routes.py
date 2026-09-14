@@ -424,3 +424,119 @@ def api_dashboard_summary(
         "online_nodes": online_nodes,
         "offline_nodes": total_nodes - online_nodes,
     }
+
+# ══════════════════════════════════════════════════════════════
+# STATISTICS
+# ══════════════════════════════════════════════════════════════
+
+@router.get("/statistics/summary")
+def api_statistics_summary(
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    from sqlalchemy import func
+    from app.Models.VehicleHistory import VehicleHistory
+    from app.Models.VehicleEvent import VehicleEvent
+    from app.Models.Node import Node
+    from app.Models.Vehicle import Vehicle
+    from datetime import datetime
+
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # 1. Total Masuk hari ini
+    entry_events_today = db.query(VehicleEvent).filter(
+        VehicleEvent.direction == "masuk",
+        VehicleEvent.created_at >= today
+    ).count()
+
+    # 2. Masih di dalam
+    masih_di_dalam = db.query(VehicleHistory).filter(
+        VehicleHistory.is_inside == True
+    ).count()
+
+    # 3. Selesai (hari ini)
+    selesai_hari_ini = db.query(VehicleHistory).filter(
+        VehicleHistory.is_inside == False,
+        VehicleHistory.exit_at >= today
+    ).count()
+
+    # 4. RFID Tidak cocok
+    rfid_tidak_cocok = 0 # Dummy count for now
+
+    # 5. Vehicle type distribution hari ini (masuk)
+    type_counts = db.query(
+        Vehicle.vehicle_type, func.count(VehicleEvent.id)
+    ).select_from(VehicleEvent).join(
+        Vehicle, VehicleEvent.plate_number == Vehicle.plate_number, isouter=True
+    ).filter(
+        VehicleEvent.direction == "masuk",
+        VehicleEvent.created_at >= today
+    ).group_by(Vehicle.vehicle_type).all()
+
+    vehicle_type_distribution = [
+        {"type": t[0] if t[0] else "Tidak Diketahui", "count": t[1]}
+        for t in type_counts
+    ]
+
+    # 6. Busy hours
+    import collections
+    busy_hours_dict = collections.defaultdict(int)
+    events_today = db.query(VehicleEvent).filter(
+        VehicleEvent.direction == "masuk",
+        VehicleEvent.created_at >= today
+    ).all()
+    for e in events_today:
+        if e.created_at:
+            busy_hours_dict[f"{e.created_at.hour:02d}"] += 1
+            
+    busy_hours = [{"hour": k, "count": v} for k, v in sorted(busy_hours_dict.items())]
+    if not busy_hours:
+        busy_hours = [{"hour": "00", "count": 0}]
+
+    # 7. Avg duration (all completed)
+    histories_completed = db.query(VehicleHistory).filter(
+        VehicleHistory.is_inside == False,
+        VehicleHistory.exit_at != None,
+        VehicleHistory.entry_at != None
+    ).all()
+    
+    durations = [(h.exit_at - h.entry_at).total_seconds() / 60 for h in histories_completed]
+    avg_duration_minutes = sum(durations) / len(durations) if durations else 0
+
+    # 8. Node traffic (masuk hari ini)
+    node_traffic_counts = db.query(
+        Node.id, Node.name, func.count(VehicleEvent.id)
+    ).select_from(VehicleEvent).join(
+        Node, VehicleEvent.node_id == Node.id
+    ).filter(
+        VehicleEvent.direction == "masuk",
+        VehicleEvent.created_at >= today
+    ).group_by(Node.id, Node.name).all()
+
+    node_traffic = [
+        {"node_id": r[0], "node_name": r[1], "count": r[2]}
+        for r in node_traffic_counts
+    ]
+
+    active_nodes = db.query(Node).filter(Node.status == "online").count()
+    
+    return {
+        "summary": {
+            "total_masuk": entry_events_today,
+            "masih_di_dalam": masih_di_dalam,
+            "selesai": selesai_hari_ini,
+            "rfid_tidak_cocok": rfid_tidak_cocok
+        },
+        "vehicle_type_distribution": vehicle_type_distribution,
+        "busy_hours": busy_hours,
+        "status_breakdown": {
+            "selesai": selesai_hari_ini,
+            "di_dalam": masih_di_dalam,
+            "tidak_cocok": rfid_tidak_cocok
+        },
+        "avg_duration_minutes": avg_duration_minutes,
+        "node_traffic": node_traffic,
+        "active_nodes": active_nodes,
+        "unique_vehicle_types": len(vehicle_type_distribution)
+    }
+

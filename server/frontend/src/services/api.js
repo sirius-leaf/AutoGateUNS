@@ -286,6 +286,14 @@ class ApiClient {
   async getDashboardSummary() {
     return this.request('/api/dashboard/summary')
   }
+
+  // ══════════════════════════════════════════
+  // STATISTICS
+  // ══════════════════════════════════════════
+
+  async getStatisticsSummary() {
+    return this.request('/api/statistics/summary')
+  }
 }
 
 export const api = new ApiClient(API_BASE)

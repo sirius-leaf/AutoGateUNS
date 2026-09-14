@@ -8,6 +8,7 @@ import UsersView from '@/views/UsersView.vue'
 import NodesView from '@/views/NodesView.vue'
 import VehiclesView from '@/views/VehiclesView.vue'
 import VehicleTypesView from '@/views/VehicleTypesView.vue'
+import StatisticsView from '@/views/StatisticsView.vue'
 import HistoryView from '@/views/HistoryView.vue'
 import EventsView from '@/views/EventsView.vue'
 import api from '@/services/api'
@@ -20,6 +21,7 @@ const isAuthenticated = computed(() => !!user.value)
 
 const views = {
   dashboard: DashboardView,
+  statistics: StatisticsView,
   users: UsersView,
   nodes: NodesView,
   'vehicle-types': VehicleTypesView,
