@@ -16,6 +16,7 @@ class Vehicle(Base):
     plate_number = Column(String(20), unique=True, nullable=False, index=True)
     vehicle_type = Column(String(50), nullable=True)   # mobil, motor, truk, dll
     cc = Column(Integer, nullable=True)
+    engine_type = Column(String(20), nullable=True)     # disel, bensin, listrik
     owner_id = Column(Integer, ForeignKey("vehicle_owners.id"), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

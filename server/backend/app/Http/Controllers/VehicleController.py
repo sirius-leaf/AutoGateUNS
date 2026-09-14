@@ -31,6 +31,7 @@ def search_vehicles(db: Session, q: str = "", limit: int = 20) -> list[dict]:
             "plate_number": v.plate_number,
             "vehicle_type": v.vehicle_type,
             "cc": v.cc,
+            "engine_type": v.engine_type,
             "owner_id": v.owner_id,
             "owner_name": v.owner.owner_name if v.owner else None,
             "owner_address": v.owner.owner_address if v.owner else None,
@@ -59,6 +60,7 @@ def list_vehicles(db: Session, q: str = "", skip: int = 0, limit: int = 50) -> d
                 "plate_number": v.plate_number,
                 "vehicle_type": v.vehicle_type,
                 "cc": v.cc,
+                "engine_type": v.engine_type,
                 "owner_id": v.owner_id,
                 "owner_name": v.owner.owner_name if v.owner else None,
                 "owner_address": v.owner.owner_address if v.owner else None,
@@ -109,6 +111,8 @@ def update_vehicle(db: Session, vehicle_id: int, request: VehicleUpdateRequest) 
         vehicle.vehicle_type = request.vehicle_type
     if request.cc is not None:
         vehicle.cc = request.cc
+    if request.engine_type is not None:
+        vehicle.engine_type = request.engine_type
 
     from app.Models.VehicleOwner import VehicleOwner
     if request.owner_name is not None or request.owner_address is not None or request.owner_phone is not None:
@@ -152,6 +156,7 @@ def update_vehicle(db: Session, vehicle_id: int, request: VehicleUpdateRequest) 
         "plate_number": vehicle.plate_number,
         "vehicle_type": vehicle.vehicle_type,
         "cc": vehicle.cc,
+        "engine_type": vehicle.engine_type,
         "owner_id": vehicle.owner_id,
         "owner_name": vehicle.owner.owner_name if vehicle.owner else None,
         "owner_address": vehicle.owner.owner_address if vehicle.owner else None,

@@ -20,6 +20,7 @@ const vehicleTypes = ref([])
 const form = ref({
   vehicle_type: '',
   cc: null,
+  engine_type: '',
   owner_name: '',
   owner_address: '',
   owner_phone: '',
@@ -71,6 +72,7 @@ const openEdit = (v) => {
   form.value = {
     vehicle_type: v.vehicle_type || '',
     cc: v.cc ?? null,
+    engine_type: v.engine_type || '',
     owner_name: v.owner_name || '',
     owner_address: v.owner_address || '',
     owner_phone: v.owner_phone || '',
@@ -96,6 +98,9 @@ const handleSave = async () => {
     }
     if (form.value.cc !== (editingVehicle.value.cc ?? null)) {
       payload.cc = form.value.cc
+    }
+    if (form.value.engine_type !== (editingVehicle.value.engine_type || '')) {
+      payload.engine_type = form.value.engine_type || null
     }
     if (form.value.owner_name !== (editingVehicle.value.owner_name || '')) {
       payload.owner_name = form.value.owner_name
@@ -170,6 +175,7 @@ onMounted(fetchVehicles)
               <th class="text-left py-3 px-4 text-zinc-500 font-medium">Plat Nomor</th>
               <th class="text-left py-3 px-4 text-zinc-500 font-medium">Pemilik</th>
               <th class="text-left py-3 px-4 text-zinc-500 font-medium">Tipe</th>
+              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Tipe Mesin</th>
               <th class="text-left py-3 px-4 text-zinc-500 font-medium">CC</th>
               <th class="text-left py-3 px-4 text-zinc-500 font-medium">Terdaftar</th>
               <th class="text-right py-3 px-4 text-zinc-500 font-medium">Aksi</th>
@@ -185,16 +191,17 @@ onMounted(fetchVehicles)
               <td class="py-3 px-4 font-mono font-bold text-white">{{ v.plate_number }}</td>
               <td class="py-3 px-4 text-zinc-300">{{ v.owner_name || '---' }}</td>
               <td class="py-3 px-4 text-zinc-400">{{ v.vehicle_type || '---' }}</td>
+              <td class="py-3 px-4 text-zinc-400 capitalize">{{ v.engine_type || '---' }}</td>
               <td class="py-3 px-4 text-zinc-400">{{ v.cc ?? '---' }}</td>
               <td class="py-3 px-4 text-zinc-500 whitespace-nowrap">{{ formatTime(v.created_at) }}</td>
               <td class="py-3 px-4 text-right">
-                <button @click="openEdit(v)" class="p-1.5 rounded text-zinc-400 hover:text-blue-400 hover:bg-blue-950/50 transition" title="Edit tipe &amp; CC">
+                <button @click="openEdit(v)" class="p-1.5 rounded text-zinc-400 hover:text-blue-400 hover:bg-blue-950/50 transition" title="Edit kendaraan">
                   <Pencil class="w-3.5 h-3.5" />
                 </button>
               </td>
             </tr>
             <tr v-if="!vehicles.length && !loading">
-              <td colspan="7" class="py-6 text-center text-zinc-500">Belum ada kendaraan tercatat</td>
+              <td colspan="8" class="py-6 text-center text-zinc-500">Belum ada kendaraan tercatat</td>
             </tr>
           </tbody>
         </table>
@@ -267,6 +274,20 @@ onMounted(fetchVehicles)
               </option>
             </select>
             <p class="text-[10px] text-zinc-600 mt-1">Tipe diambil dari master data Tipe Kendaraan</p>
+          </div>
+
+          <!-- Tipe Mesin (dropdown) -->
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Tipe Mesin</label>
+            <select
+              v-model="form.engine_type"
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="" class="bg-zinc-900">-- Pilih tipe mesin --</option>
+              <option value="disel" class="bg-zinc-900">Disel</option>
+              <option value="bensin" class="bg-zinc-900">Bensin</option>
+              <option value="listrik" class="bg-zinc-900">Listrik</option>
+            </select>
           </div>
 
           <!-- CC -->

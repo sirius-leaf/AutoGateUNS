@@ -31,7 +31,20 @@ def init_db():
     from app.Models import VehicleType  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _ensure_engine_type_column()
     _link_orphan_vehicles()
+
+
+def _ensure_engine_type_column():
+    """Memastikan kolom engine_type ada pada tabel vehicles."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(engine)
+    if "vehicles" in inspector.get_table_names():
+        columns = [c["name"] for c in inspector.get_columns("vehicles")]
+        if "engine_type" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE vehicles ADD COLUMN engine_type VARCHAR(20)"))
+            print("[DB] Added engine_type column to vehicles table")
 
 
 def _link_orphan_vehicles():
