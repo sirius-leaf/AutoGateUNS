@@ -4,6 +4,7 @@ Konfigurasi aplikasi Server.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -11,8 +12,15 @@ load_dotenv(BASE_DIR / ".env")
 
 class Settings:
     # Database PostgreSQL
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", "postgresql+psycopg2://postgres:password@localhost:5432/autogatedb"
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
+    POSTGRES_USER: str = os.environ["POSTGRES_USER"]
+    POSTGRES_PASSWORD: str = os.environ["POSTGRES_PASSWORD"]
+    POSTGRES_DB: str = os.environ["POSTGRES_DB"]
+    DATABASE_URL: str = (
+        "postgresql+psycopg2://"
+        f"{quote_plus(POSTGRES_USER)}:{quote_plus(POSTGRES_PASSWORD)}@"
+        f"{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
     )
 
     # Auth — JWT

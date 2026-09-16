@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import api from '@/services/api'
 
@@ -15,6 +15,11 @@ let donutChart = null
 let barChart = null
 
 const TYPE_COLORS = ['#7f77dd', '#1d9e75', '#f5821f', '#d4537e', '#378add']
+
+const nodeTrafficTotal = computed(() => {
+  if (!data.value?.node_traffic) return 0
+  return data.value.node_traffic.reduce((sum, n) => sum + n.masuk + n.keluar, 0)
+})
 
 function formatDuration(minutes) {
   const total = Math.round(minutes)
@@ -247,15 +252,18 @@ onBeforeUnmount(() => {
                 <span class="text-[var(--text-primary)]">
                   <span class="font-semibold text-[var(--accent)] mr-1">{{ i + 1 }}</span>{{ n.node_name }}
                 </span>
-                <span class="font-semibold" :class="i === 0 ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'">
-                  {{ n.count }}  {{ pct(n.count, data.summary.total_masuk) }}%
+                <span class="font-semibold text-[10px]">
+                  <span class="text-[var(--accent)]">{{ n.masuk }} masuk</span>
+                  <span class="text-[var(--text-muted)]"> · </span>
+                  <span class="text-blue-500">{{ n.keluar }} keluar</span>
                 </span>
               </div>
-              <div class="h-1.5 rounded bg-[var(--border)] overflow-hidden">
-                <div class="h-full" :class="i === 0 ? 'bg-[var(--accent)]' : 'bg-[var(--text-muted)]'" :style="{ width: pct(n.count, data.summary.total_masuk) + '%' }"></div>
+              <div class="h-1.5 rounded bg-[var(--border)] overflow-hidden flex">
+                <div class="h-full bg-[var(--accent)]" :style="{ width: pct(n.masuk, nodeTrafficTotal) + '%' }"></div>
+                <div class="h-full bg-blue-500" :style="{ width: pct(n.keluar, nodeTrafficTotal) + '%' }"></div>
               </div>
             </div>
-            <p v-if="!data.node_traffic.length" class="text-[var(--text-muted)]">Belum ada trafik hari ini.</p>
+            <p v-if="!data.node_traffic.length" class="text-[var(--text-muted)]">Belum ada node terdaftar.</p>
           </div>
 
           <div class="border-t border-[var(--border)] pt-3 flex gap-6">

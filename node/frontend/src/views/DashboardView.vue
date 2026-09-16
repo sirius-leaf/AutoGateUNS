@@ -247,12 +247,18 @@ onUnmounted(() => {
                   <td class="py-2 px-3">
                     <span
                       :class="[
-                        'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold capitalize',
                         plate.direction === 'masuk'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
                       ]"
                     >
+                      <span
+                        :class="[
+                          'w-1.5 h-1.5 rounded-full',
+                          plate.direction === 'masuk' ? 'bg-emerald-400' : 'bg-amber-400',
+                        ]"
+                      ></span>
                       {{ plate.direction }}
                     </span>
                   </td>

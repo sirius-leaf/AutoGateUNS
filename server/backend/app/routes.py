@@ -503,20 +503,30 @@ def api_statistics_summary(
     durations = [(h.exit_at - h.entry_at).total_seconds() / 60 for h in histories_completed]
     avg_duration_minutes = sum(durations) / len(durations) if durations else 0
 
-    # 8. Node traffic (masuk hari ini)
-    node_traffic_counts = db.query(
-        Node.id, Node.name, func.count(VehicleEvent.id)
-    ).select_from(VehicleEvent).join(
-        Node, VehicleEvent.node_id == Node.id
-    ).filter(
-        VehicleEvent.direction == "masuk",
-        VehicleEvent.created_at >= today
+    # 8. Node traffic (masuk & keluar hari ini, per node)
+    from sqlalchemy import case
+
+    node_traffic_query = db.query(
+        Node.id,
+        Node.name,
+        func.sum(case((VehicleEvent.direction == "masuk", 1), else_=0)).label("masuk"),
+        func.sum(case((VehicleEvent.direction == "keluar", 1), else_=0)).label("keluar"),
+    ).select_from(Node).outerjoin(
+        VehicleEvent,
+        (VehicleEvent.node_id == Node.id) & (VehicleEvent.created_at >= today)
     ).group_by(Node.id, Node.name).all()
 
     node_traffic = [
-        {"node_id": r[0], "node_name": r[1], "count": r[2]}
-        for r in node_traffic_counts
+        {
+            "node_id": r[0],
+            "node_name": r[1],
+            "masuk": r[2] or 0,
+            "keluar": r[3] or 0,
+            "count": (r[2] or 0) + (r[3] or 0),
+        }
+        for r in node_traffic_query
     ]
+    node_traffic.sort(key=lambda n: n["count"], reverse=True)
 
     active_nodes = db.query(Node).filter(Node.status == "online").count()
     

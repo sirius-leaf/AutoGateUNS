@@ -240,8 +240,12 @@ def get_all(
     search: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    rfid_status: Optional[str] = None,
+    rfid_search: Optional[str] = None,
+    synced: Optional[bool] = None,
+    max_confidence: Optional[float] = None,
 ) -> tuple[list[Vehicle], int]:
-    """Ambil data kendaraan dari SQLite dengan filter direction, search plat nomor, & range tanggal."""
+    """Ambil data kendaraan dari SQLite dengan berbagai filter."""
     with get_db() as conn:
         query = "SELECT * FROM vehicles"
         count_query = "SELECT COUNT(*) FROM vehicles"
@@ -263,6 +267,25 @@ def get_all(
         if end_date:
             where_clauses.append("created_at <= ?")
             params.append(f"{end_date} 23:59:59" if " " not in end_date and "T" not in end_date else end_date)
+
+        if rfid_status == "ada":
+            where_clauses.append("rfid_uid IS NOT NULL AND rfid_uid != '-'")
+        elif rfid_status == "tanpa":
+            where_clauses.append("rfid_uid = '-'")
+        elif rfid_status == "menunggu":
+            where_clauses.append("rfid_uid IS NULL")
+
+        if rfid_search and rfid_search.strip():
+            where_clauses.append("rfid_uid LIKE ?")
+            params.append(f"%{rfid_search.strip()}%")
+
+        if synced is not None:
+            where_clauses.append("synced = ?")
+            params.append(1 if synced else 0)
+
+        if max_confidence is not None:
+            where_clauses.append("confidence IS NOT NULL AND confidence <= ?")
+            params.append(max_confidence)
 
         if where_clauses:
             where_str = " WHERE " + " AND ".join(where_clauses)

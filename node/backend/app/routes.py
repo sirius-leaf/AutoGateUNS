@@ -40,6 +40,10 @@ def get_plates(
     search: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
+    rfid_status: Optional[str] = Query(None, description="ada | tanpa | menunggu"),
+    rfid_search: Optional[str] = Query(None),
+    synced: Optional[bool] = Query(None),
+    max_confidence: Optional[float] = Query(None),
 ):
     """Ambil data kendaraan dari SQLite lokal."""
     return VehicleController.index(
@@ -49,6 +53,10 @@ def get_plates(
         search=search,
         start_date=start_date,
         end_date=end_date,
+        rfid_status=rfid_status,
+        rfid_search=rfid_search,
+        synced=synced,
+        max_confidence=max_confidence,
     )
 
 

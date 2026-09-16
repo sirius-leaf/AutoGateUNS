@@ -24,6 +24,10 @@ def index(
     search: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    rfid_status: Optional[str] = None,
+    rfid_search: Optional[str] = None,
+    synced: Optional[bool] = None,
+    max_confidence: Optional[float] = None,
 ) -> VehicleListOut:
     """GET /api/plates — daftar kendaraan lokal."""
     items, total = VehicleService.get_all(
@@ -33,6 +37,10 @@ def index(
         search=search,
         start_date=start_date,
         end_date=end_date,
+        rfid_status=rfid_status,
+        rfid_search=rfid_search,
+        synced=synced,
+        max_confidence=max_confidence,
     )
     return VehicleListOut(
         total=total,

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import {
   Search, Calendar, Filter, ChevronLeft, ChevronRight,
-  RefreshCw, Loader2, History, X, Nfc,
+  RefreshCw, Loader2, History, X, Nfc, SlidersHorizontal,
 } from '@lucide/vue'
 import PlateDetailModal from '@/components/gate/PlateDetailModal.vue'
 import api from '@/services/api'
@@ -17,6 +17,11 @@ const search = ref('')
 const direction = ref('')
 const startDate = ref('')
 const endDate = ref('')
+const rfidStatus = ref('')
+const rfidSearch = ref('')
+const synced = ref('')
+const maxConfidence = ref('')
+const showAdvancedFilters = ref(false)
 const page = ref(1)
 const perPage = 20
 
@@ -36,6 +41,10 @@ const fetchHistory = async () => {
       search: search.value.trim() || undefined,
       start_date: startDate.value || undefined,
       end_date: endDate.value || undefined,
+      rfid_status: rfidStatus.value || undefined,
+      rfid_search: rfidSearch.value.trim() || undefined,
+      synced: synced.value === '' ? undefined : synced.value === 'true',
+      max_confidence: maxConfidence.value !== '' ? Number(maxConfidence.value) : undefined,
     })
     items.value = data.items || []
     total.value = data.total || 0
@@ -64,6 +73,10 @@ const resetFilters = () => {
   direction.value = ''
   startDate.value = ''
   endDate.value = ''
+  rfidStatus.value = ''
+  rfidSearch.value = ''
+  synced.value = ''
+  maxConfidence.value = ''
   page.value = 1
   fetchHistory()
 }
@@ -170,8 +183,79 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Toggle Filter Lanjutan -->
+      <div class="flex justify-end">
+        <button
+          @click="showAdvancedFilters = !showAdvancedFilters"
+          class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition"
+          :class="showAdvancedFilters
+            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+            : 'bg-zinc-950 text-zinc-400 border-zinc-700 hover:text-zinc-200'"
+        >
+          <SlidersHorizontal class="w-3.5 h-3.5" />
+          <span>Filter Lanjutan</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filters Panel -->
+      <div v-if="showAdvancedFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-zinc-800/60">
+        <div>
+          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Status RFID</label>
+          <select
+            v-model="rfidStatus"
+            @change="handleFilterChange"
+            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value="">Semua Status</option>
+            <option value="ada">Ada RFID</option>
+            <option value="tanpa">Tanpa RFID</option>
+            <option value="menunggu">Menunggu Input</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Cari RFID UID</label>
+          <div class="relative">
+            <input
+              v-model="rfidSearch"
+              @input="handleSearchInput"
+              type="text"
+              placeholder="Contoh: 04A2B1C3..."
+              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white uppercase font-mono placeholder:normal-case placeholder:font-sans focus:outline-none focus:border-emerald-500"
+            />
+            <Nfc class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Status Sync</label>
+          <select
+            v-model="synced"
+            @change="handleFilterChange"
+            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value="">Semua Status</option>
+            <option value="true">Terkirim</option>
+            <option value="false">Pending</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Confidence Maks (%)</label>
+          <input
+            v-model="maxConfidence"
+            @change="handleFilterChange"
+            type="number"
+            min="0"
+            max="100"
+            placeholder="Contoh: 80"
+            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+      </div>
+
       <!-- Active Filters Reset -->
-      <div v-if="search || direction || startDate || endDate" class="flex items-center justify-between pt-2 border-t border-zinc-800/60 text-xs">
+      <div v-if="search || direction || startDate || endDate || rfidStatus || rfidSearch || synced || maxConfidence" class="flex items-center justify-between pt-2 border-t border-zinc-800/60 text-xs">
         <span class="text-zinc-400">Filter aktif diterapkan</span>
         <button
           @click="resetFilters"
@@ -215,12 +299,18 @@ onMounted(() => {
               <td class="py-2.5 px-3">
                 <span
                   :class="[
-                    'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold capitalize',
                     item.direction === 'masuk'
                       ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
                   ]"
                 >
+                  <span
+                    :class="[
+                      'w-1.5 h-1.5 rounded-full',
+                      item.direction === 'masuk' ? 'bg-emerald-400' : 'bg-amber-400',
+                    ]"
+                  ></span>
                   {{ item.direction }}
                 </span>
               </td>

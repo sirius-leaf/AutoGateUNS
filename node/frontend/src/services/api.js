@@ -44,6 +44,10 @@ class ApiClient {
     if (params.search) query.set('search', params.search)
     if (params.start_date) query.set('start_date', params.start_date)
     if (params.end_date) query.set('end_date', params.end_date)
+    if (params.rfid_status) query.set('rfid_status', params.rfid_status)
+    if (params.rfid_search) query.set('rfid_search', params.rfid_search)
+    if (params.synced !== undefined) query.set('synced', params.synced)
+    if (params.max_confidence !== undefined) query.set('max_confidence', params.max_confidence)
     const qs = query.toString()
     return this.request(`/api/plates${qs ? `?${qs}` : ''}`)
   }
