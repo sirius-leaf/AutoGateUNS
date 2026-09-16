@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.Models.Node import Node
 from app.Http.Requests.NodeRequest import (
     NodeCreateRequest,
@@ -17,8 +18,8 @@ from app.Http.Requests.NodeRequest import (
     NodeListOut,
 )
 
-# Batas waktu untuk menganggap node offline (3 menit tanpa heartbeat)
-OFFLINE_THRESHOLD_MINUTES = 3
+# Batas waktu untuk menganggap node offline (dalam detik, diambil dari settings/env)
+OFFLINE_THRESHOLD_SECONDS = settings.NODE_OFFLINE_THRESHOLD_SECONDS
 
 
 def ensure_utc(dt: datetime) -> datetime:
@@ -70,7 +71,7 @@ def create_node(db: Session, request: NodeCreateRequest) -> NodeOut:
 def list_nodes(db: Session) -> NodeListOut:
     """GET /api/nodes — semua node + API key + auto-mark offline."""
     nodes = db.query(Node).order_by(Node.created_at.desc()).all()
-    threshold = datetime.now(timezone.utc) - timedelta(minutes=OFFLINE_THRESHOLD_MINUTES)
+    threshold = datetime.now(timezone.utc) - timedelta(seconds=settings.NODE_OFFLINE_THRESHOLD_SECONDS)
 
     result = []
     for node in nodes:
@@ -93,7 +94,7 @@ def get_node(db: Session, node_id: str) -> NodeOut:
     if not node:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node tidak ditemukan")
 
-    threshold = datetime.now(timezone.utc) - timedelta(minutes=OFFLINE_THRESHOLD_MINUTES)
+    threshold = datetime.now(timezone.utc) - timedelta(seconds=settings.NODE_OFFLINE_THRESHOLD_SECONDS)
     if (
         node.last_seen_at
         and ensure_utc(node.last_seen_at) < threshold

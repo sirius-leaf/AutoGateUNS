@@ -42,6 +42,9 @@ class Settings:
     APP_HOST: str = os.getenv("APP_HOST", "0.0.0.0")
     APP_PORT: int = int(os.getenv("APP_PORT", "8000"))
 
+    # Node Monitoring
+    NODE_OFFLINE_THRESHOLD_SECONDS: int = int(os.getenv("NODE_OFFLINE_THRESHOLD_SECONDS", "60"))
+
 
 settings = Settings()
 
