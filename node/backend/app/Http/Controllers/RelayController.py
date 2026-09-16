@@ -109,3 +109,74 @@ class RelayController:
             )
         except Exception as e:
             logger.error(f"Gagal auto-close relay untuk gate {channel}: {e}")
+
+    @staticmethod
+    async def toggle_relay(direction: str) -> RelayControlResponse:
+        """
+        Toggle status gate (Always Open Mode):
+        - Menggunakan CAMERA_IN_RELAY_OPEN (masuk) atau CAMERA_OUT_RELAY_OPEN (keluar).
+        - Jika saat ini OFF: Mengubah open_ch menjadi ON (Gate terbuka terus).
+        - Jika saat ini ON: Mengubah open_ch menjadi OFF, lalu mengirim pulse 1s ke close_ch untuk menutup gate.
+        """
+        direction_clean = direction.lower().strip()
+        if direction_clean == "masuk":
+            open_ch = settings.CAMERA_IN_RELAY_OPEN
+            close_ch = settings.CAMERA_IN_RELAY_CLOSE
+        elif direction_clean == "keluar":
+            open_ch = settings.CAMERA_OUT_RELAY_OPEN
+            close_ch = settings.CAMERA_OUT_RELAY_CLOSE
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Direction '{direction}' tidak valid. Harus 'masuk' atau 'keluar'."
+            )
+
+        client = ModbusTcpClient(settings.MODBUS_HOST, port=settings.MODBUS_PORT)
+        if not client.connect():
+            raise HTTPException(
+                status_code=503,
+                detail=f"Gagal terhubung ke Modbus Relay di {settings.MODBUS_HOST}:{settings.MODBUS_PORT}"
+            )
+
+        address = max(open_ch - 1, 0)
+        current_status = False
+        try:
+            read_result = client.read_coils(address, count=1)
+            if not read_result.isError() and hasattr(read_result, 'bits') and len(read_result.bits) > 0:
+                current_status = read_result.bits[0]
+        except Exception as e:
+            logger.warning(f"Gagal membaca status coil channel {open_ch}: {e}")
+        finally:
+            client.close()
+
+        if not current_status:
+            # Dari OFF ke ON: Hidupkan channel OPEN (Always Open)
+            return RelayController.control(
+                RelayControlRequest(channel=open_ch, status=True),
+                triggered_by=f"always_open_on_{direction_clean}",
+            )
+        else:
+            # Dari ON ke OFF: Matikan channel OPEN, kemudian trigger CLOSE (pulse 1s)
+            res = RelayController.control(
+                RelayControlRequest(channel=open_ch, status=False),
+                triggered_by=f"always_open_off_{direction_clean}",
+            )
+
+            # Trigger close gate (ON -> sleep 1s -> OFF)
+            try:
+                RelayController.control(
+                    RelayControlRequest(channel=close_ch, status=True),
+                    triggered_by=f"auto_close_after_toggle_{direction_clean}",
+                )
+                await asyncio.sleep(1.0)
+                RelayController.control(
+                    RelayControlRequest(channel=close_ch, status=False),
+                    triggered_by=f"auto_close_after_toggle_{direction_clean}",
+                )
+            except Exception as e:
+                logger.error(f"Gagal memicu relay close channel {close_ch} setelah toggle OFF: {e}")
+
+            return res
+
+
+

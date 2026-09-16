@@ -2,9 +2,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   Copy, Check, ChevronsLeft, Square, Camera, Loader2, AlertTriangle,
-  X, ShieldCheck, ShieldX, Settings, Save, Eye, EyeOff, RefreshCw
+  X, ShieldCheck, ShieldX, Settings, Save, Eye, EyeOff, RefreshCw, ToggleRight
 } from '@lucide/vue'
 import api from '@/services/api'
+
 
 const props = defineProps({
   gate: {
@@ -101,7 +102,20 @@ const handleCloseGate = async () => {
   }
 }
 
+const handleToggleRelay = async () => {
+  relayLoading.value = true
+  relayError.value = ''
+  try {
+    await api.toggleRelay(props.direction)
+  } catch (err) {
+    relayError.value = 'Gagal toggle relay: ' + err.message
+  } finally {
+    relayLoading.value = false
+  }
+}
+
 const handleCapture = async () => {
+
   capturing.value = true
   captureError.value = ''
   captureSuccess.value = ''
@@ -240,12 +254,19 @@ onUnmounted(() => { if (streamTimer) clearInterval(streamTimer) })
     </div>
 
     <!-- Action Buttons -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 border-t border-zinc-800">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-zinc-800">
       <button @click="handleOpenGate" :disabled="relayLoading"
         class="flex items-center justify-center gap-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/70 font-semibold py-2 px-3 rounded-md text-xs transition active:scale-[0.98] disabled:opacity-50">
         <Loader2 v-if="relayLoading" class="w-4 h-4 animate-spin" />
         <ChevronsLeft v-else class="w-4 h-4 text-emerald-400" />
         <span>Buka Manual</span>
+      </button>
+      <button @click="handleToggleRelay" :disabled="relayLoading"
+        class="flex items-center justify-center gap-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/70 font-semibold py-2 px-3 rounded-md text-xs transition active:scale-[0.98] disabled:opacity-50"
+        :title="direction === 'masuk' ? 'Toggle Relay Ch 3' : 'Toggle Relay Ch 6'">
+        <Loader2 v-if="relayLoading" class="w-4 h-4 animate-spin" />
+        <ToggleRight v-else class="w-4 h-4 text-emerald-400" />
+        <span>Selalu Buka</span>
       </button>
       <button @click="handleCloseGate" :disabled="relayLoading"
         class="flex items-center justify-center gap-2 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800/70 font-semibold py-2 px-3 rounded-md text-xs transition active:scale-[0.98] disabled:opacity-50">
@@ -259,6 +280,7 @@ onUnmounted(() => { if (streamTimer) clearInterval(streamTimer) })
         <span>Capture</span>
       </button>
     </div>
+
 
   </div>
 </template>

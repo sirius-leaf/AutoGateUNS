@@ -111,6 +111,15 @@ def control_relay(payload: RelayControlRequest):
     return RelayController.control(payload, triggered_by="manual")
 
 
+@router.post("/relay/toggle/{direction}", response_model=RelayControlResponse)
+async def toggle_relay(direction: str):
+    """Toggle status gate / Always Open (ON = Open channel active, OFF = Open channel inactive + pulse Close channel)."""
+    return await RelayController.toggle_relay(direction)
+
+
+
+
+
 # ── Stream ──
 
 @router.get("/stream/{direction}")

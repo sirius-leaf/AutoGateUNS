@@ -78,6 +78,13 @@ class ApiClient {
     })
   }
 
+  async toggleRelay(direction) {
+    return this.request(`/api/relay/toggle/${direction}`, {
+      method: 'POST',
+    })
+  }
+
+
   // ── Stream ──
 
   getStreamUrl(direction) {
