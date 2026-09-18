@@ -10,7 +10,6 @@ const page = ref(0)
 const limit = 50
 const searchQ = ref('')
 
-// Modal edit
 const showModal = ref(false)
 const editingVehicle = ref(null)
 const saving = ref(false)
@@ -137,99 +136,104 @@ onMounted(fetchVehicles)
   <div class="p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          <Car class="w-5 h-5 text-zinc-400" />
+        <h2 class="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <Car class="w-5 h-5 text-[var(--text-muted)]" />
           Kendaraan
         </h2>
-        <p class="text-xs text-zinc-400 mt-1">Daftar kendaraan yang tercatat dari semua node</p>
+        <p class="text-xs text-[var(--text-muted)] mt-1">Daftar kendaraan yang tercatat dari semua node</p>
       </div>
-      <span class="text-xs text-zinc-500">{{ total }} kendaraan</span>
+      <span class="text-xs text-[var(--text-muted)] bg-[var(--bg-panel-alt)] border border-[var(--border)] px-2.5 py-1 rounded-full">{{ total }} kendaraan</span>
     </div>
 
     <!-- Search -->
     <div class="mb-4">
       <div class="flex gap-2 max-w-sm">
         <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
           <input
             v-model="searchQ"
             type="text"
             placeholder="Cari plat nomor..."
             @keyup.enter="handleSearch"
-            class="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 font-mono"
+            class="w-full bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] font-mono"
           />
         </div>
-        <button @click="handleSearch" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition">
+        <button @click="handleSearch" class="px-4 py-2 bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] text-sm rounded-lg transition border border-[var(--border)]">
           Cari
         </button>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden">
+    <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-xl shadow-xl shadow-black/40 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
-            <tr class="border-b border-zinc-800">
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium w-16">ID</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Plat Nomor</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Pemilik</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Tipe</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Tipe Mesin</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">CC</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Terdaftar</th>
-              <th class="text-right py-3 px-4 text-zinc-500 font-medium">Aksi</th>
+            <tr class="border-b border-[var(--border)]">
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium w-16">ID</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Plat Nomor</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Pemilik</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Tipe</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Tipe Mesin</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">CC</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Terdaftar</th>
+              <th class="text-right py-3 px-4 text-[var(--text-muted)] font-medium">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="v in vehicles"
               :key="v.id"
-              class="border-b border-zinc-800/50 hover:bg-zinc-800/30"
+              class="border-b border-[var(--border)]/50 hover:bg-[var(--bg-panel-alt)] transition-colors"
             >
-              <td class="py-3 px-4 text-zinc-500 font-mono">{{ v.id }}</td>
-              <td class="py-3 px-4 font-mono font-bold text-white">{{ v.plate_number }}</td>
-              <td class="py-3 px-4 text-zinc-300">{{ v.owner_name || '---' }}</td>
-              <td class="py-3 px-4 text-zinc-400">{{ v.vehicle_type || '---' }}</td>
-              <td class="py-3 px-4 text-zinc-400 capitalize">{{ v.engine_type || '---' }}</td>
-              <td class="py-3 px-4 text-zinc-400">{{ v.cc ?? '---' }}</td>
-              <td class="py-3 px-4 text-zinc-500 whitespace-nowrap">{{ formatTime(v.created_at) }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] font-mono">{{ v.id }}</td>
+              <td class="py-3 px-4 font-mono font-bold text-[var(--text-primary)]">{{ v.plate_number }}</td>
+              <td class="py-3 px-4 text-[var(--text-primary)]">{{ v.owner_name || '---' }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)]">{{ v.vehicle_type || '---' }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] capitalize">{{ v.engine_type || '---' }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)]">{{ v.cc ? `${v.cc} cc` : '---' }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] whitespace-nowrap">{{ formatTime(v.created_at) }}</td>
               <td class="py-3 px-4 text-right">
-                <button @click="openEdit(v)" class="p-1.5 rounded text-zinc-400 hover:text-blue-400 hover:bg-blue-950/50 transition" title="Edit kendaraan">
+                <button @click="openEdit(v)" class="p-1.5 rounded text-[var(--text-muted)] hover:text-blue-400 hover:bg-blue-500/10 transition" title="Edit kendaraan">
                   <Pencil class="w-3.5 h-3.5" />
                 </button>
               </td>
             </tr>
             <tr v-if="!vehicles.length && !loading">
-              <td colspan="8" class="py-6 text-center text-zinc-500">Belum ada kendaraan tercatat</td>
+              <td colspan="8" class="py-12">
+                <div class="flex flex-col items-center justify-center gap-2 text-[var(--text-muted)]">
+                  <Car class="w-8 h-8 opacity-30" />
+                  <span class="text-sm">Belum ada kendaraan tercatat</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="flex items-center justify-center py-4 gap-2 text-zinc-500">
-        <Loader2 class="w-4 h-4 animate-spin" />
+      <div v-if="loading" class="flex items-center justify-center py-4 gap-2 text-[var(--text-muted)]">
+        <Loader2 class="w-4 h-4 animate-spin text-[var(--accent)]" />
         <span class="text-xs">Memuat...</span>
       </div>
 
       <!-- Pagination -->
-      <div v-if="total > limit" class="flex items-center justify-between px-4 py-3 border-t border-zinc-800">
-        <span class="text-xs text-zinc-500">
+      <div v-if="total > limit" class="flex items-center justify-between px-4 py-3 border-t border-[var(--border)]">
+        <span class="text-xs text-[var(--text-muted)]">
           {{ page * limit + 1 }}–{{ Math.min((page + 1) * limit, total) }} dari {{ total }}
         </span>
         <div class="flex gap-1">
           <button
             @click="prevPage"
             :disabled="page === 0"
-            class="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 disabled:opacity-30 transition"
+            class="p-1.5 rounded bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] disabled:opacity-30 transition border border-[var(--border)]"
           >
             <ChevronLeft class="w-4 h-4" />
           </button>
           <button
             @click="nextPage"
             :disabled="(page + 1) * limit >= total"
-            class="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 disabled:opacity-30 transition"
+            class="p-1.5 rounded bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] disabled:opacity-30 transition border border-[var(--border)]"
           >
             <ChevronRight class="w-4 h-4" />
           </button>
@@ -239,10 +243,10 @@ onMounted(fetchVehicles)
 
     <!-- Modal Edit -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" @click.self="closeModal">
-      <div class="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl shadow-black/60 w-full max-w-md">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-          <h3 class="text-lg font-bold text-white">Edit Kendaraan</h3>
-          <button @click="closeModal" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">
+      <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-2xl shadow-2xl shadow-black/60 w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+          <h3 class="text-lg font-bold text-[var(--text-primary)]">Edit Kendaraan</h3>
+          <button @click="closeModal" class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-panel-alt)] transition">
             <X class="w-5 h-5" />
           </button>
         </div>
@@ -250,85 +254,90 @@ onMounted(fetchVehicles)
         <form @submit.prevent="handleSave" class="p-6 space-y-4">
           <!-- Plat Nomor (read-only) -->
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">Plat Nomor</label>
-            <div class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-400 font-mono">
+            <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Plat Nomor</label>
+            <div class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-muted)] font-mono">
               {{ editingVehicle?.plate_number }}
             </div>
           </div>
 
           <!-- Tipe Kendaraan (dropdown) -->
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">Tipe Kendaraan</label>
+            <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Tipe Kendaraan</label>
             <select
               v-model="form.vehicle_type"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
-              <option value="" class="bg-zinc-900">-- Pilih tipe --</option>
+              <option value="">-- Pilih tipe --</option>
               <option
                 v-for="t in vehicleTypes"
                 :key="t.id"
                 :value="t.name"
-                class="bg-zinc-900"
               >
                 {{ t.name }}
               </option>
             </select>
-            <p class="text-[10px] text-zinc-600 mt-1">Tipe diambil dari master data Tipe Kendaraan</p>
+            <p class="text-[10px] text-[var(--text-muted)] mt-1">Tipe diambil dari master data Tipe Kendaraan</p>
           </div>
 
           <!-- Tipe Mesin (dropdown) -->
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">Tipe Mesin</label>
+            <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Tipe Mesin</label>
             <select
               v-model="form.engine_type"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
-              <option value="" class="bg-zinc-900">-- Pilih tipe mesin --</option>
-              <option value="disel" class="bg-zinc-900">Disel</option>
-              <option value="bensin" class="bg-zinc-900">Bensin</option>
-              <option value="listrik" class="bg-zinc-900">Listrik</option>
+              <option value="">-- Pilih tipe mesin --</option>
+              <option value="disel">Disel</option>
+              <option value="bensin">Bensin</option>
+              <option value="listrik">Listrik</option>
             </select>
           </div>
 
           <!-- CC -->
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">CC</label>
-            <input
-              v-model.number="form.cc"
-              type="number"
-              min="0"
-              max="9999"
-              placeholder="misal: 1500"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
-            />
+            <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">CC</label>
+            <div class="relative">
+              <input
+                v-model.number="form.cc"
+                type="number"
+                min="0"
+                max="9999"
+                placeholder="misal: 1500"
+                class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 pr-10 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--text-muted)]">cc</span>
+            </div>
           </div>
-          
-          <div class="border-t border-zinc-800 my-2 pt-2">
-             <h4 class="text-sm font-bold text-white mb-2">Data Pemilik</h4>
-             
+
+          <div class="border-t border-[var(--border)] my-2 pt-3">
+             <h4 class="text-sm font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
+               <span class="w-1 h-3.5 rounded-full bg-[var(--accent)]"></span>
+               Data Pemilik
+             </h4>
+
              <div class="space-y-3">
                <div>
-                 <label class="block text-xs font-medium text-zinc-400 mb-1">Nama Pemilik</label>
-                 <input v-model="form.owner_name" type="text" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                 <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Nama Pemilik</label>
+                 <input v-model="form.owner_name" type="text" class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]" />
                </div>
                <div>
-                 <label class="block text-xs font-medium text-zinc-400 mb-1">Alamat</label>
-                 <input v-model="form.owner_address" type="text" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                 <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Alamat</label>
+                 <input v-model="form.owner_address" type="text" class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]" />
                </div>
                <div>
-                 <label class="block text-xs font-medium text-zinc-400 mb-1">Telepon</label>
-                 <input v-model="form.owner_phone" type="text" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" />
+                 <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Telepon</label>
+                 <input v-model="form.owner_phone" type="text" class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]" />
                </div>
              </div>
           </div>
 
-          <div v-if="error" class="flex items-start gap-2 bg-red-950/80 border border-red-800/60 rounded-lg px-3 py-2">
-            <AlertTriangle class="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-            <p class="text-xs text-red-300">{{ error }}</p>
+          <div v-if="error" class="flex items-start gap-2 bg-[var(--status-fail)]/10 border border-[var(--status-fail)]/30 rounded-lg px-3 py-2">
+            <AlertTriangle class="w-4 h-4 text-[var(--status-fail)] mt-0.5 shrink-0" />
+            <p class="text-xs text-[var(--status-fail)]">{{ error }}</p>
           </div>
 
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" @click="closeModal" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition">Batal</button>
+            <button type="button" @click="closeModal" class="px-4 py-2 bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] text-sm font-medium rounded-lg transition border border-[var(--border)]">Batal</button>
             <button type="submit" :disabled="saving" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
               <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
               <Check v-else class="w-4 h-4" />

@@ -6,6 +6,10 @@ import {
 } from '@lucide/vue'
 import PlateDetailModal from '@/components/gate/PlateDetailModal.vue'
 import api from '@/services/api'
+import PageHeader from '@/components/layout/PageHeader.vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { theme } = useTheme()
 
 const items = ref([])
 const total = ref(0)
@@ -25,10 +29,26 @@ const showAdvancedFilters = ref(false)
 const page = ref(1)
 const perPage = 20
 
+const emit = defineEmits(['navigate'])
+
 // Search debouncer
 let searchTimeout = null
 
 const totalPages = computed(() => Math.ceil(total.value / perPage) || 1)
+
+// BARU: badge status sinkronisasi (mendukung 3 status: pending/terkirim/gagal
+// kalau backend sudah kirim field sync_status, kalau belum tetap fallback ke
+// boolean item.synced seperti sebelumnya — tidak menghapus logic lama)
+const getSyncBadge = (item) => {
+  const raw = (item.sync_status || item.synced_status || '').toString().toLowerCase()
+  if (raw === 'failed' || raw === 'gagal' || raw === 'error') {
+    return { label: 'Gagal', tone: 'var(--status-fail)' }
+  }
+  if (raw === 'sent' || raw === 'synced' || raw === 'terkirim' || item.synced === true) {
+    return { label: 'Terkirim', tone: 'var(--status-ok)' }
+  }
+  return { label: 'Pending', tone: 'var(--status-pending)' }
+}
 
 const fetchHistory = async () => {
   loading.value = true
@@ -94,65 +114,62 @@ onMounted(() => {
 
 <template>
   <div class="p-4 sm:p-6 space-y-6">
-    <!-- Header Page -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/90 border border-zinc-800 rounded-xl p-5 shadow-xl shadow-black/40">
-      <div>
-        <div class="flex items-center gap-2">
-          <History class="w-5 h-5 text-emerald-400" />
-          <h2 class="text-xl font-bold text-white tracking-tight">Riwayat Kendaraan Lengkap</h2>
-        </div>
-        <p class="text-xs text-zinc-400 mt-1">Daftar seluruh kendaraan yang tercatat di Pos Satpam</p>
-      </div>
-
-      <button
-        @click="fetchHistory"
-        :disabled="loading"
-        class="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-4 py-2.5 rounded-lg border border-zinc-700/60 transition disabled:opacity-50"
-      >
-        <Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
-        <RefreshCw v-else class="w-4 h-4 text-emerald-400" />
-        <span>Refresh Data</span>
-      </button>
-    </div>
+    <PageHeader
+      title="Riwayat Kendaraan Lengkap"
+      subtitle="Daftar seluruh kendaraan yang tercatat di Pos Satpam"
+      @navigate="emit('navigate', $event)"
+    >
+      <template #actions>
+        <button
+          @click="fetchHistory"
+          :disabled="loading"
+          class="flex items-center justify-center gap-2 bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] text-xs font-semibold px-4 py-2.5 rounded-lg border border-[var(--border)] transition disabled:opacity-50"
+        >
+          <Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
+          <RefreshCw v-else class="w-4 h-4 text-[var(--accent)]" />
+          <span>Refresh Data</span>
+        </button>
+      </template>
+    </PageHeader>
 
     <!-- Filter Bar -->
-    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 shadow-xl shadow-black/40 space-y-4">
+    <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-xl p-4 shadow-xl shadow-black/20 space-y-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Search Plat -->
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Cari Plat Nomor</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Cari Plat Nomor</label>
           <div class="relative">
             <input
               v-model="search"
               @input="handleSearchInput"
               type="text"
               placeholder="Contoh: AD1234AB..."
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white uppercase font-mono placeholder:normal-case placeholder:font-sans focus:outline-none focus:border-emerald-500"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg pl-9 pr-3 py-2 text-xs text-[var(--text-primary)] uppercase font-mono placeholder:normal-case placeholder:font-sans focus:outline-none focus:border-[var(--accent)]"
             />
-            <Search class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search class="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <!-- Filter Arah -->
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Arah Pintu</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Arah Pintu</label>
           <div class="relative">
             <select
               v-model="direction"
               @change="handleFilterChange"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg pl-9 pr-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             >
               <option value="">Semua Arah</option>
               <option value="masuk">Masuk</option>
               <option value="keluar">Keluar</option>
             </select>
-            <Filter class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Filter class="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <!-- Tanggal Mulai -->
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Dari Tanggal</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Dari Tanggal</label>
           <div class="relative cursor-pointer" @click="$refs.startDateInput?.showPicker()">
             <input
               ref="startDateInput"
@@ -160,15 +177,16 @@ onMounted(() => {
               @change="handleFilterChange"
               @focus="$event.target.showPicker && $event.target.showPicker()"
               type="date"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer [color-scheme:dark]"
+              :style="{ colorScheme: theme }"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg pl-9 pr-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
             />
-            <Calendar class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Calendar class="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
         <!-- Tanggal Akhir -->
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Sampai Tanggal</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Sampai Tanggal</label>
           <div class="relative cursor-pointer" @click="$refs.endDateInput?.showPicker()">
             <input
               ref="endDateInput"
@@ -176,9 +194,10 @@ onMounted(() => {
               @change="handleFilterChange"
               @focus="$event.target.showPicker && $event.target.showPicker()"
               type="date"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer [color-scheme:dark]"
+              :style="{ colorScheme: theme }"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg pl-9 pr-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
             />
-            <Calendar class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Calendar class="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
       </div>
@@ -188,9 +207,9 @@ onMounted(() => {
         <button
           @click="showAdvancedFilters = !showAdvancedFilters"
           class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition"
-          :class="showAdvancedFilters
-            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-            : 'bg-zinc-950 text-zinc-400 border-zinc-700 hover:text-zinc-200'"
+          :style="showAdvancedFilters
+            ? { color: 'var(--accent)', borderColor: 'var(--accent)', backgroundColor: 'color-mix(in srgb, var(--accent) 12%, transparent)' }
+            : { color: 'var(--text-muted)', borderColor: 'var(--border)', backgroundColor: 'var(--bg-panel-alt)' }"
         >
           <SlidersHorizontal class="w-3.5 h-3.5" />
           <span>Filter Lanjutan</span>
@@ -198,13 +217,13 @@ onMounted(() => {
       </div>
 
       <!-- Advanced Filters Panel -->
-      <div v-if="showAdvancedFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-zinc-800/60">
+      <div v-if="showAdvancedFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[var(--border)]">
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Status RFID</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Status RFID</label>
           <select
             v-model="rfidStatus"
             @change="handleFilterChange"
-            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+            class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
           >
             <option value="">Semua Status</option>
             <option value="ada">Ada RFID</option>
@@ -214,25 +233,25 @@ onMounted(() => {
         </div>
 
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Cari RFID UID</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Cari RFID UID</label>
           <div class="relative">
             <input
               v-model="rfidSearch"
               @input="handleSearchInput"
               type="text"
               placeholder="Contoh: 04A2B1C3..."
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white uppercase font-mono placeholder:normal-case placeholder:font-sans focus:outline-none focus:border-emerald-500"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg pl-9 pr-3 py-2 text-xs text-[var(--text-primary)] uppercase font-mono placeholder:normal-case placeholder:font-sans focus:outline-none focus:border-[var(--accent)]"
             />
-            <Nfc class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Nfc class="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
 
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Status Sync</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Status Sync</label>
           <select
             v-model="synced"
             @change="handleFilterChange"
-            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+            class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
           >
             <option value="">Semua Status</option>
             <option value="true">Terkirim</option>
@@ -241,7 +260,7 @@ onMounted(() => {
         </div>
 
         <div>
-          <label class="block text-[11px] font-medium text-zinc-400 mb-1">Confidence Maks (%)</label>
+          <label class="block text-[11px] font-medium text-[var(--text-muted)] mb-1">Confidence Maks (%)</label>
           <input
             v-model="maxConfidence"
             @change="handleFilterChange"
@@ -249,17 +268,18 @@ onMounted(() => {
             min="0"
             max="100"
             placeholder="Contoh: 80"
-            class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+            class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
           />
         </div>
       </div>
 
       <!-- Active Filters Reset -->
-      <div v-if="search || direction || startDate || endDate || rfidStatus || rfidSearch || synced || maxConfidence" class="flex items-center justify-between pt-2 border-t border-zinc-800/60 text-xs">
-        <span class="text-zinc-400">Filter aktif diterapkan</span>
+      <div v-if="search || direction || startDate || endDate || rfidStatus || rfidSearch || synced || maxConfidence" class="flex items-center justify-between pt-2 border-t border-[var(--border)] text-xs">
+        <span class="text-[var(--text-muted)]">Filter aktif diterapkan</span>
         <button
           @click="resetFilters"
-          class="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-medium"
+          class="flex items-center gap-1 font-medium hover:opacity-80"
+          :style="{ color: 'var(--accent)' }"
         >
           <X class="w-3.5 h-3.5" />
           <span>Reset Filter</span>
@@ -268,48 +288,44 @@ onMounted(() => {
     </div>
 
     <!-- Table Section -->
-    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 shadow-xl shadow-black/40 space-y-4">
+    <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-xl p-4 shadow-xl shadow-black/20 space-y-4">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
-            <tr class="border-b border-zinc-800">
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Event ID</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Waktu Capture</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Arah</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Foto Plat</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Plat Nomor</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">RFID</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Confidence</th>
-              <th class="text-left py-3 px-3 text-zinc-400 font-semibold">Status Sync</th>
+            <tr class="border-b border-[var(--border)]">
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">ID Kejadian</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Waktu Capture</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Arah</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Foto Plat</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Plat Nomor</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Kartu RFID</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Keyakinan</th>
+              <th class="text-left py-3 px-3 text-[var(--text-muted)] font-semibold">Status Sinkronisasi</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="item in items"
               :key="item.id"
-              class="border-b border-zinc-800/50 hover:bg-zinc-800/40 cursor-pointer transition"
+              class="border-b border-[var(--border)] hover:bg-[var(--bg-panel-alt)] cursor-pointer transition"
               @click="selectedPlate = item"
             >
-              <td class="py-2.5 px-3 font-mono text-[10px] text-zinc-500">
+              <td class="py-2.5 px-3 font-mono text-[10px] text-[var(--text-muted)]">
                 {{ item.event_id ? item.event_id.substring(0, 8) + '...' : '---' }}
               </td>
-              <td class="py-2.5 px-3 font-mono text-zinc-300">
+              <td class="py-2.5 px-3 font-mono text-[var(--text-primary)]">
                 {{ item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : '---' }}
               </td>
               <td class="py-2.5 px-3">
                 <span
-                  :class="[
-                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold capitalize',
-                    item.direction === 'masuk'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-                  ]"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize"
+                  :style="item.direction === 'masuk'
+                    ? { color: 'var(--status-ok)', backgroundColor: 'color-mix(in srgb, var(--status-ok) 15%, transparent)' }
+                    : { color: 'var(--accent)', backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)' }"
                 >
                   <span
-                    :class="[
-                      'w-1.5 h-1.5 rounded-full',
-                      item.direction === 'masuk' ? 'bg-emerald-400' : 'bg-amber-400',
-                    ]"
+                    class="w-1.5 h-1.5 rounded-full"
+                    :style="{ backgroundColor: item.direction === 'masuk' ? 'var(--status-ok)' : 'var(--accent)' }"
                   ></span>
                   {{ item.direction }}
                 </span>
@@ -319,48 +335,45 @@ onMounted(() => {
                   v-if="item.scene_image_url"
                   :src="item.scene_image_url"
                   alt="Plat"
-                  class="w-16 h-10 object-contain rounded border border-zinc-700 bg-zinc-950"
+                  class="w-16 h-10 object-contain rounded border border-[var(--border)] bg-[var(--bg-panel-alt)]"
                 />
-                <span v-else class="text-zinc-600">---</span>
+                <span v-else class="text-[var(--text-muted)] opacity-60">---</span>
               </td>
-              <td class="py-2.5 px-3 font-mono font-bold text-white text-sm tracking-wider">
+              <td class="py-2.5 px-3 font-mono font-bold text-[var(--text-primary)] text-sm tracking-wider">
                 {{ item.plate_number }}
               </td>
               <td class="py-2.5 px-3">
-                    <span
-                      v-if="item.rfid_uid === '-'"
-                      class="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-400 bg-zinc-500/10 border border-zinc-500/20 px-2 py-1 rounded"
-                    >
-                      Tanpa RFID
-                    </span>
-                    <span
-                      v-else-if="item.rfid_uid"
-                      class="inline-flex items-center gap-1 font-mono text-[11px] text-violet-300 bg-violet-500/10 border border-violet-500/20 px-2 py-1 rounded"
-                    >
-                      <Nfc class="w-3 h-3" />
-                      {{ item.rfid_uid }}
-                    </span>
-                    <span v-else class="text-zinc-500 text-xs italic">---</span>
-                  </td>
-              <td class="py-2.5 px-3 text-zinc-300">
+                <span
+                  v-if="item.rfid_uid === '-'"
+                  class="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--text-muted)] border border-[var(--border)] bg-[var(--bg-panel-alt)] px-2 py-1 rounded"
+                >
+                  Tanpa RFID
+                </span>
+                <span
+                  v-else-if="item.rfid_uid"
+                  class="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-1 rounded border"
+                  :style="{ color: 'var(--accent)', borderColor: 'var(--accent)' }"
+                >
+                  <Nfc class="w-3 h-3" />
+                  {{ item.rfid_uid }}
+                </span>
+                <span v-else class="text-[var(--text-muted)] text-xs italic opacity-60">---</span>
+              </td>
+              <td class="py-2.5 px-3 text-[var(--text-primary)]">
                 {{ item.confidence ? `${item.confidence.toFixed(1)}%` : '---' }}
               </td>
               <td class="py-2.5 px-3">
                 <span
-                  :class="[
-                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold',
-                    item.synced
-                      ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                      : 'bg-amber-950/80 text-amber-400 border border-amber-800',
-                  ]"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                  :style="{ color: getSyncBadge(item).tone, backgroundColor: 'color-mix(in srgb, ' + getSyncBadge(item).tone + ' 15%, transparent)' }"
                 >
-                  <span :class="['w-1.5 h-1.5 rounded-full', item.synced ? 'bg-emerald-400' : 'bg-amber-400']"></span>
-                  {{ item.synced ? 'Synced' : 'Pending' }}
+                  <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: getSyncBadge(item).tone }"></span>
+                  {{ getSyncBadge(item).label }}
                 </span>
               </td>
             </tr>
             <tr v-if="!loading && !items.length">
-              <td colspan="8" class="py-8 text-center text-zinc-500">
+              <td colspan="8" class="py-8 text-center text-[var(--text-muted)]">
                 Tidak ada data riwayat yang ditemukan.
               </td>
             </tr>
@@ -369,28 +382,28 @@ onMounted(() => {
       </div>
 
       <!-- Pagination Bar (20 item per halaman) -->
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-zinc-800 text-xs">
-        <div class="text-zinc-400 font-medium">
-          Menampilkan <span class="text-white font-bold">{{ items.length ? (page - 1) * perPage + 1 : 0 }}</span> - 
-          <span class="text-white font-bold">{{ Math.min(page * perPage, total) }}</span> dari 
-          <span class="text-white font-bold">{{ total }}</span> riwayat
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-[var(--border)] text-xs">
+        <div class="text-[var(--text-muted)] font-medium">
+          Menampilkan <span class="text-[var(--text-primary)] font-bold">{{ items.length ? (page - 1) * perPage + 1 : 0 }}</span> -
+          <span class="text-[var(--text-primary)] font-bold">{{ Math.min(page * perPage, total) }}</span> dari
+          <span class="text-[var(--text-primary)] font-bold">{{ total }}</span> riwayat
         </div>
 
         <div class="flex items-center gap-1.5">
           <button
             @click="goToPage(page - 1)"
             :disabled="page <= 1 || loading"
-            class="p-2 rounded-lg bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 disabled:opacity-30 disabled:hover:bg-zinc-950 transition"
+            class="p-2 rounded-lg bg-[var(--bg-panel-alt)] border border-[var(--border)] hover:bg-[var(--border)] text-[var(--text-primary)] disabled:opacity-30 disabled:hover:bg-[var(--bg-panel-alt)] transition"
           >
             <ChevronLeft class="w-4 h-4" />
           </button>
-          <span class="px-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 font-mono">
+          <span class="px-3 py-1.5 bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] font-mono">
             {{ page }} / {{ totalPages }}
           </span>
           <button
             @click="goToPage(page + 1)"
             :disabled="page >= totalPages || loading"
-            class="p-2 rounded-lg bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 disabled:opacity-30 disabled:hover:bg-zinc-950 transition"
+            class="p-2 rounded-lg bg-[var(--bg-panel-alt)] border border-[var(--border)] hover:bg-[var(--border)] text-[var(--text-primary)] disabled:opacity-30 disabled:hover:bg-[var(--bg-panel-alt)] transition"
           >
             <ChevronRight class="w-4 h-4" />
           </button>

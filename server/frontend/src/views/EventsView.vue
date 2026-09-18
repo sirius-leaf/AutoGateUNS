@@ -65,90 +65,90 @@ onMounted(fetchEvents)
   <div class="p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          <Activity class="w-5 h-5 text-zinc-400" />
+        <h2 class="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <Activity class="w-5 h-5 text-[var(--text-muted)]" />
           Event Kendaraan
         </h2>
-        <p class="text-xs text-zinc-400 mt-1">Semua event masuk/keluar dari semua node</p>
+        <p class="text-xs text-[var(--text-muted)] mt-1">Semua event masuk/keluar dari semua node</p>
       </div>
-      <span class="text-xs text-zinc-500">{{ total }} event</span>
+      <span class="text-xs text-[var(--text-muted)] bg-[var(--bg-panel-alt)] border border-[var(--border)] px-2.5 py-1 rounded-full">{{ total }} event</span>
     </div>
 
     <!-- Filter -->
     <div class="mb-4 flex gap-2 flex-wrap">
       <div class="relative flex-1 max-w-xs">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
         <input
           v-model="filterPlate"
           type="text"
           placeholder="Cari plat..."
           @keyup.enter="handleSearch"
-          class="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"
+          class="w-full bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
         />
       </div>
       <select
         v-model="filterDirection"
         @change="handleSearch"
-        class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+        class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
       >
         <option value="">Semua Arah</option>
         <option value="masuk">Masuk</option>
         <option value="keluar">Keluar</option>
       </select>
-      <button @click="handleSearch" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-lg transition">
+      <button @click="handleSearch" class="px-4 py-2 bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] text-sm rounded-lg transition border border-[var(--border)]">
         <Filter class="w-4 h-4" />
       </button>
     </div>
 
     <!-- Table -->
-    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden">
+    <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-xl shadow-xl shadow-black/40 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
-            <tr class="border-b border-zinc-800">
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Waktu</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Plat</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Arah</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Node</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">RFID</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Confidence</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Gambar</th>
+            <tr class="border-b border-[var(--border)]">
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Waktu</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Plat</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Arah</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Node</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">RFID</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Confidence</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Gambar</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="e in events"
               :key="e.id"
-              class="border-b border-zinc-800/50 hover:bg-zinc-800/30"
+              class="border-b border-[var(--border)]/50 hover:bg-[var(--bg-panel-alt)] transition-colors"
             >
-              <td class="py-3 px-4 text-zinc-400 whitespace-nowrap">{{ formatTime(e.captured_at || e.created_at) }}</td>
-              <td class="py-3 px-4 font-mono font-bold text-white">{{ e.plate_number }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] whitespace-nowrap">{{ formatTime(e.captured_at || e.created_at) }}</td>
+              <td class="py-3 px-4 font-mono font-bold text-[var(--text-primary)]">{{ e.plate_number }}</td>
               <td class="py-3 px-4">
                 <span
                   v-if="e.direction === 'masuk'"
-                  class="inline-flex items-center gap-1 text-green-400 bg-green-950/50 px-2 py-0.5 rounded-full text-[10px] font-medium"
+                  class="inline-flex items-center gap-1 text-[var(--status-ok)] bg-[var(--status-ok)]/10 px-2 py-0.5 rounded-full text-[10px] font-medium"
                 >
                   <ArrowDownRight class="w-3 h-3" /> Masuk
                 </span>
                 <span
                   v-else
-                  class="inline-flex items-center gap-1 text-red-400 bg-red-950/50 px-2 py-0.5 rounded-full text-[10px] font-medium"
+                  class="inline-flex items-center gap-1 text-[var(--status-fail)] bg-[var(--status-fail)]/10 px-2 py-0.5 rounded-full text-[10px] font-medium"
                 >
                   <ArrowUpRight class="w-3 h-3" /> Keluar
                 </span>
               </td>
-              <td class="py-3 px-4 text-zinc-400 font-mono text-[10px]">{{ e.node_name || e.node_id }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] font-mono text-[10px]">{{ e.node_name || e.node_id }}</td>
               <td class="py-3 px-4">
                 <span
                   v-if="e.rfid_uid"
-                  class="inline-flex items-center gap-1 font-mono text-[10px] text-violet-300 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded"
+                  class="inline-flex items-center gap-1 font-mono text-[10px] text-violet-400 bg-violet-500/10 border border-violet-500/20 px-1.5 py-0.5 rounded"
                 >
                   <Nfc class="w-3 h-3" />
                   {{ e.rfid_uid }}
                 </span>
-                <span v-else class="text-zinc-600">---</span>
+                <span v-else class="text-[var(--text-muted)]">---</span>
               </td>
-              <td class="py-3 px-4 text-zinc-400">{{ e.confidence ? `${e.confidence}%` : '---' }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)]">{{ e.confidence ? `${e.confidence}%` : '---' }}</td>
               <td class="py-3 px-4">
                 <div class="flex gap-1">
                   <a
@@ -164,41 +164,46 @@ onMounted(fetchEvents)
                     v-if="e.scene_image_url"
                     :href="e.scene_image_url"
                     target="_blank"
-                    class="text-zinc-400 hover:text-zinc-300 transition"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
                     title="Scene"
                   >
                     <Camera class="w-3.5 h-3.5" />
                   </a>
-                  <span v-if="!e.plate_image_url && !e.scene_image_url" class="text-zinc-600">---</span>
+                  <span v-if="!e.plate_image_url && !e.scene_image_url" class="text-[var(--text-muted)]">---</span>
                 </div>
               </td>
             </tr>
             <tr v-if="!events.length && !loading">
-              <td colspan="7" class="py-6 text-center text-zinc-500">Belum ada event</td>
+              <td colspan="7" class="py-12">
+                <div class="flex flex-col items-center justify-center gap-2 text-[var(--text-muted)]">
+                  <Activity class="w-8 h-8 opacity-30" />
+                  <span class="text-sm">Belum ada event</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="flex items-center justify-center py-4 gap-2 text-zinc-500">
-        <Loader2 class="w-4 h-4 animate-spin" />
+      <div v-if="loading" class="flex items-center justify-center py-4 gap-2 text-[var(--text-muted)]">
+        <Loader2 class="w-4 h-4 animate-spin text-[var(--accent)]" />
         <span class="text-xs">Memuat...</span>
       </div>
 
       <!-- Pagination -->
-      <div v-if="total > limit" class="flex items-center justify-between px-4 py-3 border-t border-zinc-800">
-        <span class="text-xs text-zinc-500">Halaman {{ page + 1 }} dari {{ Math.ceil(total / limit) }}</span>
+      <div v-if="total > limit" class="flex items-center justify-between px-4 py-3 border-t border-[var(--border)]">
+        <span class="text-xs text-[var(--text-muted)]">Halaman {{ page + 1 }} dari {{ Math.ceil(total / limit) }}</span>
         <div class="flex gap-1">
           <button
             @click="prevPage"
             :disabled="page === 0"
-            class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded disabled:opacity-30 transition"
+            class="px-3 py-1 text-xs bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] rounded disabled:opacity-30 transition border border-[var(--border)]"
           >Prev</button>
           <button
             @click="nextPage"
             :disabled="(page + 1) * limit >= total"
-            class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded disabled:opacity-30 transition"
+            class="px-3 py-1 text-xs bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] text-[var(--text-primary)] rounded disabled:opacity-30 transition border border-[var(--border)]"
           >Next</button>
         </div>
       </div>

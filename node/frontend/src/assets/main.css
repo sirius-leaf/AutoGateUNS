@@ -1,3 +1,39 @@
+:root {
+  --bg-base: #0b1220;
+  --bg-panel: #131c2e;
+  --bg-panel-alt: #1a2438;
+  --border: #24304a;
+  --text-primary: #e5e9f0;
+  --text-muted: #8b95a7;
+  --accent: #f97316;
+  --accent-hover: #ea6a0a;
+
+  --status-ok: #22c55e;
+  --status-pending: #f59e0b;
+  --status-fail: #ef4444;
+}
+
+:root.light {
+  --bg-base: #f4f6f9;
+  --bg-panel: #ffffff;
+  --bg-panel-alt: #f0f2f6;
+  --border: #e2e5ec;
+  --text-primary: #1a2130;
+  --text-muted: #6b7280;
+  --accent: #f97316;
+  --accent-hover: #ea6a0a;
+
+  --status-ok: #16a34a;
+  --status-pending: #d97706;
+  --status-fail: #dc2626;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 @import "tailwindcss";
 
 @layer base {

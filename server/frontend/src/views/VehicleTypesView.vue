@@ -88,11 +88,11 @@ onMounted(fetchTypes)
   <div class="p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          <Tag class="w-5 h-5 text-zinc-400" />
+        <h2 class="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+          <Tag class="w-5 h-5 text-[var(--text-muted)]" />
           Tipe Kendaraan
         </h2>
-        <p class="text-xs text-zinc-400 mt-1">Master data tipe kendaraan</p>
+        <p class="text-xs text-[var(--text-muted)] mt-1">Master data tipe kendaraan</p>
       </div>
       <button
         @click="openCreate"
@@ -104,82 +104,93 @@ onMounted(fetchTypes)
     </div>
 
     <!-- Table -->
-    <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl shadow-xl shadow-black/40 overflow-hidden">
+    <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-xl shadow-xl shadow-black/40 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-xs">
           <thead>
-            <tr class="border-b border-zinc-800">
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">ID</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Nama</th>
-              <th class="text-left py-3 px-4 text-zinc-500 font-medium">Dibuat</th>
-              <th class="text-right py-3 px-4 text-zinc-500 font-medium">Aksi</th>
+            <tr class="border-b border-[var(--border)]">
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">ID</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Nama</th>
+              <th class="text-left py-3 px-4 text-[var(--text-muted)] font-medium">Dibuat</th>
+              <th class="text-right py-3 px-4 text-[var(--text-muted)] font-medium">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="t in types"
               :key="t.id"
-              class="border-b border-zinc-800/50 hover:bg-zinc-800/30"
+              class="border-b border-[var(--border)]/50 hover:bg-[var(--bg-panel-alt)] transition-colors"
             >
-              <td class="py-3 px-4 text-zinc-500 font-mono">{{ t.id }}</td>
-              <td class="py-3 px-4 font-semibold text-white">{{ t.name }}</td>
-              <td class="py-3 px-4 text-zinc-500 whitespace-nowrap">{{ formatTime(t.created_at) }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] font-mono">{{ t.id }}</td>
+              <td class="py-3 px-4 font-semibold text-[var(--text-primary)]">{{ t.name }}</td>
+              <td class="py-3 px-4 text-[var(--text-muted)] whitespace-nowrap">{{ formatTime(t.created_at) }}</td>
               <td class="py-3 px-4 text-right">
                 <div class="flex items-center justify-end gap-1">
-                  <button @click="openEdit(t)" class="p-1.5 rounded text-zinc-400 hover:text-blue-400 hover:bg-blue-950/50 transition" title="Edit">
+                  <button @click="openEdit(t)" class="p-1.5 rounded text-[var(--text-muted)] hover:text-blue-400 hover:bg-blue-500/10 transition" title="Edit">
                     <Pencil class="w-3.5 h-3.5" />
                   </button>
-                  <button @click="handleDelete(t)" class="p-1.5 rounded text-zinc-400 hover:text-red-400 hover:bg-red-950/50 transition" title="Hapus">
+                  <button @click="handleDelete(t)" class="p-1.5 rounded text-[var(--text-muted)] hover:text-[var(--status-fail)] hover:bg-[var(--status-fail)]/10 transition" title="Hapus">
                     <Trash2 class="w-3.5 h-3.5" />
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="!types.length && !loading">
-              <td colspan="4" class="py-6 text-center text-zinc-500">Belum ada tipe kendaraan</td>
+              <td colspan="4" class="py-12">
+                <div class="flex flex-col items-center justify-center gap-2 text-[var(--text-muted)]">
+                  <Tag class="w-8 h-8 opacity-30" />
+                  <span class="text-sm">Belum ada tipe kendaraan</span>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-if="loading" class="flex items-center justify-center py-4 gap-2 text-zinc-500">
-        <Loader2 class="w-4 h-4 animate-spin" />
+      <div v-if="loading" class="flex items-center justify-center py-4 gap-2 text-[var(--text-muted)]">
+        <Loader2 class="w-4 h-4 animate-spin text-[var(--accent)]" />
         <span class="text-xs">Memuat...</span>
       </div>
     </div>
 
     <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" @click.self="closeModal">
-      <div class="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl shadow-black/60 w-full max-w-md">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-          <h3 class="text-lg font-bold text-white">{{ editingType ? 'Edit Tipe Kendaraan' : 'Tambah Tipe Kendaraan' }}</h3>
-          <button @click="closeModal" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition">
+      <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-2xl shadow-2xl shadow-black/60 w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
+          <h3 class="text-lg font-bold text-[var(--text-primary)]">{{ editingType ? 'Edit Tipe Kendaraan' : 'Tambah Tipe Kendaraan' }}</h3>
+          <button @click="closeModal" class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-panel-alt)] transition">
             <X class="w-5 h-5" />
           </button>
         </div>
 
         <form @submit.prevent="handleSave" class="p-6 space-y-4">
           <div>
-            <label class="block text-xs font-medium text-zinc-400 mb-1">Nama Tipe</label>
+            <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">Nama Tipe</label>
             <input
               v-model="form.name"
               type="text"
               placeholder="misal: Mobil, Motor, Truk"
-              class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               required
             />
           </div>
 
-          <div v-if="error" class="flex items-start gap-2 bg-red-950/80 border border-red-800/60 rounded-lg px-3 py-2">
-            <AlertTriangle class="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-            <p class="text-xs text-red-300">{{ error }}</p>
+          <div v-if="error" class="flex items-start gap-2 bg-[var(--status-fail)]/10 border border-[var(--status-fail)]/30 rounded-lg px-3 py-2">
+            <AlertTriangle class="w-4 h-4 text-[var(--status-fail)] mt-0.5 shrink-0" />
+            <p class="text-xs text-[var(--status-fail)]">{{ error }}</p>
           </div>
 
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" @click="closeModal" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition">Batal</button>
-            <button type="submit" :disabled="saving" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+            <button type="button" @click="closeModal" class="px-4 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--bg-panel-alt)] text-[var(--text-primary)] hover:bg-[var(--border)] transition">
+              Batal
+            </button>
+            <button
+              type="submit"
+              :disabled="saving"
+              class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
               <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
               <Check v-else class="w-4 h-4" />
-              {{ editingType ? 'Simpan' : 'Buat' }}
+              {{ saving ? 'Menyimpan...' : editingType ? 'Simpan Perubahan' : 'Tambah Tipe' }}
             </button>
           </div>
         </form>

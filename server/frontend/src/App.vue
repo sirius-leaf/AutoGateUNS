@@ -65,7 +65,7 @@ onMounted(() => {
   <LoginView v-if="!isAuthenticated" @login-success="handleLoginSuccess" />
 
   <!-- Main App -->
-  <div v-else class="min-h-screen bg-zinc-950 text-zinc-100 flex font-sans antialiased">
+  <div v-else class="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] flex font-sans antialiased">
     <AppSidebar
       :user="user"
       :current-view="currentView"
