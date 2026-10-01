@@ -58,7 +58,7 @@ def _check_rfid_match(plate_number: str, rfid_uid: str) -> bool | None:
         return None  # Tidak ada entry record
 
     entry_rfid = row["rfid_uid"]
-    if not entry_rfid:
+    if not entry_rfid or entry_rfid == '-':
         return None  # Entry tanpa RFID
 
     return entry_rfid == rfid_uid
@@ -86,6 +86,13 @@ def handle_rfid(event_id: str, rfid_uid: str | None, background_tasks) -> dict:
 
         vehicle = Vehicle.from_row(row)
 
+        # Normalisasi: null/kosong = tanpa RFID → simpan '-' (bukan NULL),
+        # supaya tidak dianggap "menunggu RFID" oleh frontend
+        if not rfid_uid or not str(rfid_uid).strip():
+            rfid_uid = '-'
+        else:
+            rfid_uid = str(rfid_uid).strip()
+
         # Update rfid_uid
         conn.execute(
             "UPDATE vehicles SET rfid_uid = ? WHERE event_id = ?",
@@ -94,19 +101,20 @@ def handle_rfid(event_id: str, rfid_uid: str | None, background_tasks) -> dict:
 
         # Selalu buat sync_queue entry baru untuk update RFID
         # (menghindari race condition dengan sync service)
-        if rfid_uid:
-            new_payload = _build_rfid_update_payload(vehicle, rfid_uid)
-            conn.execute(
-                "INSERT INTO sync_queue (vehicle_id, payload, status) VALUES (?, ?, 'pending')",
-                (vehicle.id, json.dumps(new_payload)),
-            )
+        # '-' = tanpa RFID → tetap catat sebagai update agar server konsisten
+        new_payload = _build_rfid_update_payload(vehicle, rfid_uid)
+        conn.execute(
+            "INSERT INTO sync_queue (vehicle_id, payload, status) VALUES (?, ?, 'pending')",
+            (vehicle.id, json.dumps(new_payload)),
+        )
 
-    # Cek kecocokan RFID untuk keluar
+    # Cek kecocokan RFID untuk keluar ('-' = tanpa RFID → skip pencocokan)
     rfid_match = None
     from app.config import settings
     mode = settings.VALIDATION_MODE
+    has_rfid = bool(rfid_uid and rfid_uid != '-')
 
-    if vehicle.direction == "keluar" and rfid_uid:
+    if vehicle.direction == "keluar" and has_rfid:
         rfid_match = _check_rfid_match(vehicle.plate_number, rfid_uid)
         
         if rfid_match is False:
@@ -138,7 +146,7 @@ def handle_rfid(event_id: str, rfid_uid: str | None, background_tasks) -> dict:
         close_ch
     )
 
-    rfid_status = "dengan RFID" if rfid_uid else "tanpa RFID"
+    rfid_status = "dengan RFID" if has_rfid else "tanpa RFID"
     logger.info(f"RFID: {vehicle.plate_number} ({vehicle.direction}) — gate dibuka {rfid_status}")
 
     return {

@@ -339,18 +339,20 @@ async def handle_radar_event(request: Request, forced_direction: Optional[str] =
         logger.warning(f"Gagal pull gambar setelah 3 percobaan — simpan tanpa gambar.")
 
     # ── 7. Simpan ke SQLite + queue sync ──
+    # mode plate_only = RFID opsional → langsung isi '-', skip modal RFID
     event_id = str(uuid.uuid4())
     captured_at = info["captured_at"].isoformat() if info["captured_at"] else None
+    initial_rfid = '-' if mode == "plate_only" else None
 
     with get_db() as conn:
         cursor = conn.execute(
             """
             INSERT INTO vehicles (event_id, direction, plate_number, plate_image_path, scene_image_path,
-                                  confidence, captured_at, synced)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+                                  confidence, captured_at, synced, rfid_uid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
             """,
             (event_id, direction, plate_number, plate_image_path, scene_image_path,
-             info["confidence"], captured_at),
+             info["confidence"], captured_at, initial_rfid),
         )
         vehicle_id = cursor.lastrowid
 

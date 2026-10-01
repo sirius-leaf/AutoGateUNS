@@ -43,9 +43,35 @@ const emit = defineEmits(['navigate'])
 const pendingRfid = ref(null) // { vehicle, direction }
 const lastSeenIds = ref(new Set()) // id kendaraan yang sudah diketahui
 const firstLoad = ref(true) // skip deteksi pada load pertama
+const validationMode = ref('') // mode validasi node; plate_only = RFID opsional → skip modal
+
+const fetchValidationMode = async () => {
+  try {
+    const data = await api.getSettings()
+    if (data && data.node && data.node.VALIDATION_MODE) {
+      validationMode.value = data.node.VALIDATION_MODE
+    }
+  } catch (err) {
+    console.error('Gagal mengambil mode validasi:', err)
+  }
+}
+
+// Mode plate_only = RFID opsional → modal disembunyikan & diskip, nilai RFID '-'
+const isRfidOptional = () => validationMode.value === 'plate_only'
+
+// Auto-skip: selesaikan record NULL menjadi '-' tanpa menampilkan modal
+const autoSkipRfid = async (item) => {
+  try {
+    await api.submitRfid(item.event_id, '-')
+  } catch (err) {
+    console.error('Gagal auto-skip RFID:', err)
+  }
+}
 
 // ── Vehicle menunggu RFID (untuk banner) ──
+// Disembunyikan saat RFID opsional (plate_only)
 const waitingRfidPlates = computed(() => {
+  if (isRfidOptional()) return []
   return recentPlates.value.filter(v => v.rfid_uid === null)
 })
 
@@ -70,9 +96,26 @@ const fetchRecentPlates = async () => {
     }
 
     // Deteksi vehicle baru tanpa RFID (dari Hikvision push otomatis)
+    // Mode plate_only (RFID opsional): langsung skip → isi '-', tanpa modal
     const currentIds = new Set((data.items || []).map(v => v.id))
 
-    if (!firstLoad.value && !pendingRfid.value) {
+    if (isRfidOptional()) {
+      for (const item of (data.items || [])) {
+        if (item.rfid_uid === null) {
+          lastSeenIds.value.add(item.id)
+          await autoSkipRfid(item)
+        }
+      }
+      // Refresh sekali jika ada yang di-skip agar banner/tabel terupdate
+      if ((data.items || []).some(v => v.rfid_uid === null)) {
+        try {
+          const refreshed = await api.getPlates({ limit: 10 })
+          recentPlates.value = refreshed.items || []
+        } catch (err) {
+          console.error('Gagal refresh setelah auto-skip RFID:', err)
+        }
+      }
+    } else if (!firstLoad.value && !pendingRfid.value) {
       for (const item of (data.items || [])) {
         if (item.rfid_uid === null && !lastSeenIds.value.has(item.id)) {
           // Vehicle baru tanpa RFID — tampilkan modal
@@ -102,8 +145,15 @@ const handleRefresh = () => {
 }
 
 // Handle capture response dari GateCard (manual capture)
-const handleCaptureResponse = (response) => {
+const handleCaptureResponse = async (response) => {
   if (response.rfid_pending && response.vehicle) {
+    // Mode RFID opsional: skip modal, langsung isi '-'
+    if (isRfidOptional()) {
+      lastSeenIds.value.add(response.vehicle.id)
+      await autoSkipRfid(response.vehicle)
+      fetchRecentPlates()
+      return
+    }
     lastSeenIds.value.add(response.vehicle.id)
     pendingRfid.value = {
       vehicle: response.vehicle,
@@ -113,7 +163,9 @@ const handleCaptureResponse = (response) => {
 }
 
 // Klik banner "menunggu RFID" → buka modal lagi
+// (tidak berlaku saat RFID opsional — modal disembunyikan)
 const reopenRfidModal = (item) => {
+  if (isRfidOptional()) return
   if (!pendingRfid.value) {
     pendingRfid.value = {
       vehicle: item,
@@ -142,6 +194,7 @@ const handleRfidClose = () => {
 }
 
 onMounted(() => {
+  fetchValidationMode()
   fetchRecentPlates()
   fetchStatus()
   // Polling utama: 15 detik
@@ -344,9 +397,9 @@ onUnmounted(() => {
       @close="selectedPlate = null"
     />
 
-    <!-- Modal RFID Input -->
+    <!-- Modal RFID Input (disembunyikan saat RFID opsional / plate_only) -->
     <RfidInputModal
-      v-if="pendingRfid"
+      v-if="pendingRfid && validationMode !== 'plate_only'"
       :vehicle="pendingRfid.vehicle"
       :direction="pendingRfid.direction"
       @done="handleRfidDone"

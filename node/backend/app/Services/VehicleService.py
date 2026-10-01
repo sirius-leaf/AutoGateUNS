@@ -110,13 +110,15 @@ def capture_and_save(direction: str, channel: Optional[int] = None) -> CaptureOu
             detail=f"Kamera '{direction}' tidak mengirim gambar apa pun.",
         )
 
-    # Simpan ke SQLite
+    # Simpan ke SQLite (mode plate_only = RFID opsional → langsung isi '-',
+    # supaya tidak ada record NULL yang memicu modal RFID di frontend)
+    initial_rfid = '-' if mode == "plate_only" else None
     with get_db() as conn:
         cursor = conn.execute(
             """
             INSERT INTO vehicles (event_id, direction, plate_number, plate_image_path, scene_image_path,
-                                  confidence, captured_at, synced)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+                                  confidence, captured_at, synced, rfid_uid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
             """,
             (
                 event_id,
@@ -126,6 +128,7 @@ def capture_and_save(direction: str, channel: Optional[int] = None) -> CaptureOu
                 scene_image_path,
                 result["confidence"],
                 result["captured_at"].isoformat() if result["captured_at"] else None,
+                initial_rfid,
             ),
         )
         vehicle_id = cursor.lastrowid
