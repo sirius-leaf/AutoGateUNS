@@ -1,0 +1,69 @@
+# Compose KHUSUS deploy backend (tanpa frontend).
+#
+# Cara pakai (dari folder server/backend/):
+#   1. cp .env.example .env  (jika belum ada) lalu isi POSTGRES_PASSWORD, SECRET_KEY, dll.
+#   2. docker compose up -d --build
+#   3. Cek: curl http://localhost:8000/  → {"status":"ok",...}
+#   4. Logs: docker compose logs -f backend
+#
+# Catatan:
+# - Frontend TIDAK ikut di sini. Build manual lalu serve via Apache:
+#     cd ../frontend && npm ci && npm run build   (VITE_API_URL dikosongkan)
+#     → copy dist/ ke DocumentRoot Apache, contoh vhost:
+#       ../frontend/apache-autogate.conf.example
+# - POSTGRES_HOST di .env di-override menjadi "postgres" (nama service di bawah),
+#   jadi .env yang sama tetap bisa dipakai untuk run lokal (localhost).
+# - Data Postgres disimpan di volume postgres_data (persist antar restart/update).
+# - File gambar node disimpan di ./storage (bind mount, ikut ter-backup folder).
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: autogate-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - autogate
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build: .
+    container_name: autogate-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Paksa backend bicara ke service postgres di network ini (bukan localhost).
+      POSTGRES_HOST: postgres
+      # Jumlah worker uvicorn (override bila perlu): UVICORN_WORKERS=4 docker compose up -d
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - autogate
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:$${APP_PORT:-8000}/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  autogate:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -15,3 +15,5 @@ storage/captures/*
 .idea
 
 alembic/versions/__pycache__
+
+docker-compose*.yml

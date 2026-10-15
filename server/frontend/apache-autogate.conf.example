@@ -1,0 +1,40 @@
+# Contoh VirtualHost Apache untuk serve frontend (hasil `npm run build`)
+# + reverse proxy ke backend container.
+#
+# Prasyarat di server:
+#   sudo a2enmod proxy proxy_http rewrite
+#   cd server/frontend && npm ci && npm run build   # pastikan VITE_API_URL kosong
+#   sudo mkdir -p /var/www/autogate && sudo cp -r dist/* /var/www/autogate/dist/
+#   sudo cp apache-autogate.conf.example /etc/apache2/sites-available/autogate.conf
+#   # sesuaikan ServerName + port backend (APP_PORT, default 8000), lalu:
+#   sudo a2ensite autogate && sudo systemctl reload apache2
+#
+# Kenapa ini bekerja: frontend memakai URL relatif saat VITE_API_URL kosong
+# (lihat src/services/api.js), jadi /api dan /storage otomatis same-origin
+# dan diteruskan ke backend di bawah.
+
+<VirtualHost *:80>
+    ServerName autogate.example.com
+
+    DocumentRoot /var/www/autogate/dist
+
+    <Directory /var/www/autogate/dist>
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    # SPA fallback — JANGAN rewrite /api dan /storage ke index.html
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/(api|storage)(/|$)
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-f
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} !-d
+    RewriteRule ^ /index.html [L]
+
+    # Teruskan API + file gambar ke backend container (sesuaikan port APP_PORT)
+    ProxyPreserveHost On
+    ProxyPass /api http://127.0.0.1:8000/api
+    ProxyPassReverse /api http://127.0.0.1:8000/api
+    ProxyPass /storage http://127.0.0.1:8000/storage
+    ProxyPassReverse /storage http://127.0.0.1:8000/storage
+</VirtualHost>
