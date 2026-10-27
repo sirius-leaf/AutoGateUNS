@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   Copy, Check, ChevronsLeft, Square, Camera, Loader2, AlertTriangle,
   X, ShieldCheck, ShieldX, Settings, Save, Eye, EyeOff, RefreshCw, ToggleRight,
-  DoorOpen, ScanLine, Nfc, Car
+  DoorOpen, ScanLine, Nfc, Car, Radio
 } from '@lucide/vue'
 import api from '@/services/api'
 
@@ -18,6 +18,10 @@ const props = defineProps({
     required: true, // "masuk" atau "keluar"
   },
   nodeStatus: {
+    type: Object,
+    default: null,
+  },
+  activeDetection: {
     type: Object,
     default: null,
   },
@@ -95,6 +99,27 @@ const gateOnline = computed(() => {
   }
   return true
 })
+
+// --- BARU: status radar BSM ---
+const radarOnline = computed(() => {
+  if (props.nodeStatus?.radar && typeof props.nodeStatus.radar.connected === 'boolean') {
+    return props.nodeStatus.radar.connected
+  }
+  return false
+})
+
+const triggeringRadar = ref(false)
+const handleSimulateRadar = async () => {
+  if (triggeringRadar.value) return
+  triggeringRadar.value = true
+  try {
+    await api.triggerRadar(props.direction)
+  } catch (err) {
+    console.error('Simulasi radar error:', err)
+  } finally {
+    triggeringRadar.value = false
+  }
+}
 
 // --- BARU: status aktivitas (badge kedua di header) ---
 const activityStatus = computed(() => {
@@ -252,6 +277,16 @@ onUnmounted(() => {
           </span>
         </div>
 
+        <!-- Radar Status Indicator -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-panel-alt)] border border-[var(--border)]"
+             :title="radarOnline ? 'Radar BSM Terhubung' : 'Radar BSM Tidak Terhubung'">
+          <span class="w-2 h-2 rounded-full shrink-0"
+                :style="{ backgroundColor: radarOnline ? 'var(--status-ok)' : 'var(--status-fail)' }"></span>
+          <span class="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">
+            Radar: {{ radarOnline ? 'Online' : 'Offline' }}
+          </span>
+        </div>
+
         <!-- BARU: badge status aktivitas (Menunggu / Memproses / Terdeteksi) -->
         <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-panel-alt)] border border-[var(--border)]">
           <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: activityStatus.tone }"></span>
@@ -261,14 +296,25 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Quick Refresh Button -->
-      <button
-        @click="handleRefreshStream"
-        class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs transition active:scale-95 shadow-sm"
-        title="Refresh Kamera">
-        <RefreshCw :class="['w-3.5 h-3.5', refreshingStream ? 'animate-spin' : '']" />
-        <span class="hidden sm:inline">Refresh Kamera</span>
-      </button>
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button
+          @click="handleSimulateRadar"
+          :disabled="triggeringRadar"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text-muted)] hover:text-amber-400 text-xs transition active:scale-95 shadow-sm disabled:opacity-50"
+          title="Simulasi Deteksi Objek Radar (Testing)">
+          <Radio :class="['w-3.5 h-3.5 text-amber-400', triggeringRadar ? 'animate-ping' : '']" />
+          <span class="hidden sm:inline">Tes Radar</span>
+        </button>
+
+        <button
+          @click="handleRefreshStream"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-panel-alt)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs transition active:scale-95 shadow-sm"
+          title="Refresh Kamera">
+          <RefreshCw :class="['w-3.5 h-3.5', refreshingStream ? 'animate-spin' : '']" />
+          <span class="hidden sm:inline">Refresh Kamera</span>
+        </button>
+      </div>
     </div>
 
     <!-- BARU: baris sub-status gerbang + lama offline -->
@@ -340,6 +386,44 @@ onUnmounted(() => {
             title="Muat ulang stream kamera">
             <RefreshCw :class="['w-3.5 h-3.5', refreshingStream ? 'animate-spin' : '']" />
           </button>
+        </div>
+
+        <!-- Radar Active Detection Overlay -->
+        <div
+          v-if="props.activeDetection"
+          class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/95 via-black/80 to-transparent z-20 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-2.5">
+            <span
+              :class="[
+                'w-2.5 h-2.5 rounded-full shrink-0',
+                props.activeDetection.status === 'awaiting_rfid' ? 'bg-emerald-400 animate-ping' :
+                props.activeDetection.status === 'waiting_capture' ? 'bg-amber-400 animate-ping' : 'bg-blue-400 animate-pulse'
+              ]"
+            />
+            <div>
+              <p class="text-xs font-bold text-white">
+                <span v-if="props.activeDetection.status === 'waiting_capture'">
+                  Objek Terdeteksi — Memotret dalam {{ props.activeDetection.capture_in_seconds ?? 5 }}s
+                </span>
+                <span v-else-if="props.activeDetection.status === 'awaiting_rfid'">
+                  Objek Terdeteksi — Menunggu Input RFID
+                </span>
+                <span v-else-if="props.activeDetection.status === 'capturing'">
+                  Sedang Mengambil Foto Kamera...
+                </span>
+                <span v-else>
+                  Status: {{ props.activeDetection.status }}
+                </span>
+              </p>
+              <p class="text-[10px] text-zinc-300">
+                {{ props.activeDetection.status === 'waiting_capture' ? 'Mode Plat: foto otomatis diambil setelah jeda 5 detik' : 'Mode Plat + RFID: scan kartu untuk memicu foto' }}
+              </p>
+            </div>
+          </div>
+
+          <Loader2 v-if="props.activeDetection.status === 'capturing'" class="w-4 h-4 text-blue-400 animate-spin shrink-0" />
+          <Nfc v-else-if="props.activeDetection.status === 'awaiting_rfid'" class="w-4 h-4 text-emerald-400 animate-bounce shrink-0" />
         </div>
       </div>
     </div>

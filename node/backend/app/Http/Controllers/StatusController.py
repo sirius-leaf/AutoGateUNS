@@ -7,15 +7,16 @@ from datetime import datetime
 from app.database import get_db
 from app.Models.DeviceStatus import DeviceStatus
 from app.Services.CameraService import check_camera_alive
+from app.Services.RadarService import radar_service
 
 
 def get_status() -> dict:
     """GET /api/status — status perangkat saat ini."""
     with get_db() as conn:
         row = conn.execute("SELECT * FROM device_status WHERE id = 1").fetchone()
-    if row:
-        return DeviceStatus.from_row(row).to_dict()
-    return DeviceStatus().to_dict()
+    status = DeviceStatus.from_row(row).to_dict() if row else DeviceStatus().to_dict()
+    status["radar"] = radar_service.status()
+    return status
 
 
 def update_camera_status(direction: str, active: bool):

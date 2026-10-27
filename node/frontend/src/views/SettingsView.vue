@@ -17,6 +17,7 @@ const emit = defineEmits(['navigate'])
 
 const serverForm = ref({})
 const relayForm = ref({})
+const radarForm = ref({})
 const camInForm = ref({})
 const camOutForm = ref({})
 const nodeForm = ref({})
@@ -27,6 +28,7 @@ const fetchSettings = async () => {
     const data = await api.getSettings()
     serverForm.value = { ...data.server }
     relayForm.value = { ...data.relay }
+    radarForm.value = { ...data.radar }
     nodeForm.value = { ...data.node }
 
     // Process interval to seconds for display
@@ -62,6 +64,7 @@ const handleSave = async (section) => {
     let updates = {}
     if (section === 'server') updates = { ...serverForm.value }
     if (section === 'relay') updates = { ...relayForm.value }
+    if (section === 'radar') updates = { ...radarForm.value }
     if (section === 'node') updates = { ...nodeForm.value }
     if (section === 'camera_in') {
       const secVal = parseFloat(camInForm.value.CAMERA_IN_INTERVAL)
@@ -336,7 +339,7 @@ onMounted(fetchSettings)
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <Radio class="w-4 h-4 text-[var(--accent)]" />
-            <h3 class="text-sm font-bold text-[var(--text-primary)]">Modbus Relay</h3>
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">Modbus Relay Barrier Gate</h3>
           </div>
           <button @click="handleSave('relay')" :disabled="saving"
             class="flex items-center gap-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition disabled:opacity-50">
@@ -354,6 +357,67 @@ onMounted(fetchSettings)
           <div>
             <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Modbus Port</label>
             <input v-model="relayForm.MODBUS_PORT" type="number"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Radar (Modbus Discrete Input) -->
+      <div class="bg-[var(--bg-panel)] border border-[var(--border)] rounded-xl p-5 shadow-xl shadow-black/20">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <Radio class="w-4 h-4 text-[var(--accent)]" />
+            <h3 class="text-sm font-bold text-[var(--text-primary)]">Radar Deteksi Kendaraan (Modbus BSM)</h3>
+          </div>
+          <button @click="handleSave('radar')" :disabled="saving"
+            class="flex items-center gap-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition disabled:opacity-50">
+            <Loader2 v-if="saving" class="w-3.5 h-3.5 animate-spin" />
+            <Save v-else class="w-3.5 h-3.5" />
+            Simpan
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Status Radar</label>
+            <select v-model="radarForm.RADAR_ENABLED"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]">
+              <option value="true">Aktif (Enabled)</option>
+              <option value="false">Nonaktif (Disabled)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Radar Host (IP)</label>
+            <input v-model="radarForm.RADAR_HOST" type="text"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Radar Port</label>
+            <input v-model="radarForm.RADAR_PORT" type="number"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Address Masuk (X1)</label>
+            <input v-model="radarForm.RADAR_ADDRESS_IN" type="number"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Address Keluar (X2)</label>
+            <input v-model="radarForm.RADAR_ADDRESS_OUT" type="number"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Jeda Capture Plat Saja (detik)</label>
+            <input v-model="radarForm.CAPTURE_DELAY_SECONDS" type="number" step="0.5" min="0"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Cooldown Deteksi (detik)</label>
+            <input v-model="radarForm.RADAR_COOLDOWN" type="number" step="0.5" min="1"
+              class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-[var(--text-muted)] font-medium mb-1">Polling Interval (detik)</label>
+            <input v-model="radarForm.RADAR_POLL_INTERVAL" type="number" step="0.1" min="0.1"
               class="w-full bg-[var(--bg-panel-alt)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:border-[var(--accent)]" />
           </div>
         </div>

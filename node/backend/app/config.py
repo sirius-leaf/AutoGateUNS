@@ -142,6 +142,51 @@ class Settings:
     def MODBUS_PORT(self) -> int:
         return int(_getenv("MODBUS_PORT", "502"))
 
+    # ── Radar (Modbus Discrete Input) ──
+    @property
+    def RADAR_ENABLED(self) -> bool:
+        return _bool(_getenv("RADAR_ENABLED", "true"), True)
+
+    @property
+    def RADAR_HOST(self) -> str:
+        return _getenv("RADAR_HOST", "192.168.1.117")
+
+    @property
+    def RADAR_PORT(self) -> int:
+        return int(_getenv("RADAR_PORT", "502"))
+
+    @property
+    def RADAR_DEVICE_ID(self) -> int:
+        return int(_getenv("RADAR_DEVICE_ID", "1"))
+
+    @property
+    def RADAR_ADDRESS_IN(self) -> int:
+        return int(_getenv("RADAR_ADDRESS_IN", "0"))
+
+    @property
+    def RADAR_ADDRESS_OUT(self) -> int:
+        return int(_getenv("RADAR_ADDRESS_OUT", "1"))
+
+    @property
+    def RADAR_POLL_INTERVAL(self) -> float:
+        return float(_getenv("RADAR_POLL_INTERVAL", "0.5"))
+
+    @property
+    def RADAR_COOLDOWN(self) -> float:
+        return float(_getenv("RADAR_COOLDOWN", "5"))
+
+    @property
+    def DETECTION_RFID_TIMEOUT(self) -> int:
+        return int(_getenv("DETECTION_RFID_TIMEOUT", "180"))
+
+    @property
+    def DETECTION_CAPTURE_TIMEOUT(self) -> int:
+        return int(_getenv("DETECTION_CAPTURE_TIMEOUT", "120"))
+
+    @property
+    def CAPTURE_DELAY_SECONDS(self) -> float:
+        return float(_getenv("CAPTURE_DELAY_SECONDS", "5"))
+
     # ── Server (untuk sinkronisasi) ──
     @property
     def SERVER_URL(self) -> str:

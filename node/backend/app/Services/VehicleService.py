@@ -58,7 +58,7 @@ def _auth_headers() -> dict:
     return headers
 
 
-def capture_and_save(direction: str, channel: Optional[int] = None) -> CaptureOutcome:
+def capture_and_save(direction: str, channel: Optional[int] = None, rfid_uid: Optional[str] = None) -> CaptureOutcome:
     """
     Trigger kamera, simpan foto + data ke SQLite lokal,
     lalu masukkan ke antrian sinkronisasi.
@@ -110,9 +110,11 @@ def capture_and_save(direction: str, channel: Optional[int] = None) -> CaptureOu
             detail=f"Kamera '{direction}' tidak mengirim gambar apa pun.",
         )
 
-    # Simpan ke SQLite (mode plate_only = RFID opsional → langsung isi '-',
-    # supaya tidak ada record NULL yang memicu modal RFID di frontend)
-    initial_rfid = '-' if mode == "plate_only" else None
+    # Simpan ke SQLite (jika rfid_uid diberikan, gunakan; jika mode plate_only, isi '-')
+    if rfid_uid is not None:
+        initial_rfid = str(rfid_uid).strip() if str(rfid_uid).strip() else '-'
+    else:
+        initial_rfid = '-' if mode == "plate_only" else None
     with get_db() as conn:
         cursor = conn.execute(
             """

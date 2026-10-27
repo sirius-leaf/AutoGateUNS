@@ -101,6 +101,25 @@ def init_db():
         );
 
         INSERT OR IGNORE INTO device_status (id) VALUES (1);
+
+        CREATE TABLE IF NOT EXISTS detections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            detection_id TEXT UNIQUE NOT NULL,
+            direction TEXT NOT NULL,
+            status TEXT NOT NULL,
+            rfid_uid TEXT,
+            capture_at TEXT,
+            event_id TEXT,
+            vehicle_id INTEGER,
+            message TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_detections_id ON detections(detection_id);
+        CREATE INDEX IF NOT EXISTS idx_detections_status ON detections(status);
+        CREATE INDEX IF NOT EXISTS idx_detections_direction ON detections(direction);
     """)
 
     conn.commit()

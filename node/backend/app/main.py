@@ -14,6 +14,7 @@ from app.config import settings
 from app.database import init_db
 from app.routes import router as api_router
 from app.Services.SyncService import sync_service
+from app.Services.RadarService import radar_service
 from app.Http.Controllers.StatusController import refresh_camera_status
 
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +56,9 @@ async def on_startup():
     asyncio.create_task(sync_service.start())
     logger.info("Background sync task started")
 
+    # Mulai service radar
+    radar_service.start()
+
     # Refresh status kamera pertama kali
     try:
         refresh_camera_status()
@@ -65,6 +69,7 @@ async def on_startup():
 
 @app.on_event("shutdown")
 async def on_shutdown():
+    await radar_service.stop()
     await sync_service.stop()
 
 

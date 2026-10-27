@@ -38,6 +38,16 @@ EDITABLE_KEYS = {
     # Relay
     "MODBUS_HOST",
     "MODBUS_PORT",
+    # Radar
+    "RADAR_ENABLED",
+    "RADAR_HOST",
+    "RADAR_PORT",
+    "RADAR_DEVICE_ID",
+    "RADAR_ADDRESS_IN",
+    "RADAR_ADDRESS_OUT",
+    "RADAR_POLL_INTERVAL",
+    "RADAR_COOLDOWN",
+    "CAPTURE_DELAY_SECONDS",
     # Node Identity
     "NODE_ID",
     "NODE_NAME",
@@ -82,6 +92,17 @@ def get_settings() -> dict:
         "relay": {
             "MODBUS_HOST": env_values.get("MODBUS_HOST", settings.MODBUS_HOST),
             "MODBUS_PORT": env_values.get("MODBUS_PORT", str(settings.MODBUS_PORT)),
+        },
+        "radar": {
+            "RADAR_ENABLED": env_values.get("RADAR_ENABLED", str(settings.RADAR_ENABLED).lower()),
+            "RADAR_HOST": env_values.get("RADAR_HOST", settings.RADAR_HOST),
+            "RADAR_PORT": env_values.get("RADAR_PORT", str(settings.RADAR_PORT)),
+            "RADAR_DEVICE_ID": env_values.get("RADAR_DEVICE_ID", str(settings.RADAR_DEVICE_ID)),
+            "RADAR_ADDRESS_IN": env_values.get("RADAR_ADDRESS_IN", str(settings.RADAR_ADDRESS_IN)),
+            "RADAR_ADDRESS_OUT": env_values.get("RADAR_ADDRESS_OUT", str(settings.RADAR_ADDRESS_OUT)),
+            "RADAR_POLL_INTERVAL": env_values.get("RADAR_POLL_INTERVAL", str(settings.RADAR_POLL_INTERVAL)),
+            "RADAR_COOLDOWN": env_values.get("RADAR_COOLDOWN", str(settings.RADAR_COOLDOWN)),
+            "CAPTURE_DELAY_SECONDS": env_values.get("CAPTURE_DELAY_SECONDS", str(settings.CAPTURE_DELAY_SECONDS)),
         },
         "node": {
             "NODE_ID": env_values.get("NODE_ID", settings.NODE_ID),

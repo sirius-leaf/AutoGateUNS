@@ -7,6 +7,12 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query, HTTPException, R
 from fastapi.responses import Response
 
 from app.Http.Controllers import VehicleController, StreamController
+from app.Http.Controllers.DetectionController import (
+    pending as pending_detections,
+    show as show_detection,
+    submit_rfid as submit_detection_rfid,
+    trigger as trigger_radar_detection,
+)
 from app.Http.Controllers.RelayController import RelayController
 from app.Http.Controllers.StatusController import get_status
 from app.Http.Controllers.SyncController import get_sync_status, manual_sync
@@ -17,6 +23,11 @@ from app.Http.Controllers.HikvisionController import (
     handle_radar_event_keluar,
 )
 from app.Http.Controllers.RfidController import handle_rfid
+from app.Http.Requests.DetectionRequest import (
+    DetectionListOut,
+    DetectionOut,
+    DetectionRfidRequest,
+)
 from app.Http.Requests.VehicleRequest import (
     Direction,
     VehicleCaptureOut,
@@ -93,6 +104,31 @@ async def hikvision_radar_keluar(
     """Terima event ISAPI dari kamera Hikvision Keluar."""
     return await handle_radar_event_keluar(request)
 
+
+# ── Deteksi Radar ──
+
+@router.get("/detections/pending", response_model=DetectionListOut)
+def list_pending_detections(direction: Optional[Direction] = Query(None)):
+    """Deteksi radar yang masih menunggu RFID / capture kamera."""
+    return pending_detections(direction=direction)
+
+
+@router.post("/detections/trigger/{direction}", response_model=DetectionOut, status_code=201)
+async def simulate_radar_detection(direction: Direction):
+    """Simulasi event radar (untuk testing tanpa kendaraan)."""
+    return await trigger_radar_detection(direction)
+
+
+@router.get("/detections/{detection_id}", response_model=DetectionOut)
+def get_detection_status(detection_id: str):
+    """Status satu sesi deteksi radar."""
+    return show_detection(detection_id)
+
+
+@router.post("/detections/{detection_id}/rfid", response_model=DetectionOut)
+async def send_detection_rfid(detection_id: str, payload: DetectionRfidRequest):
+    """Kirim RFID untuk deteksi radar → capture kamera dijalankan."""
+    return await submit_detection_rfid(detection_id, payload)
 
 
 # ── RFID ──

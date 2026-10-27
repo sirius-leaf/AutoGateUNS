@@ -60,6 +60,30 @@ class ApiClient {
     })
   }
 
+  // ── Deteksi Radar ──
+
+  async getPendingDetections(direction = null) {
+    const qs = direction ? `?direction=${direction}` : ''
+    return this.request(`/api/detections/pending${qs}`)
+  }
+
+  async getDetection(detectionId) {
+    return this.request(`/api/detections/${detectionId}`)
+  }
+
+  async submitDetectionRfid(detectionId, rfidUid = null) {
+    return this.request(`/api/detections/${detectionId}/rfid`, {
+      method: 'POST',
+      body: JSON.stringify({ rfid_uid: rfidUid }),
+    })
+  }
+
+  async triggerRadar(direction) {
+    return this.request(`/api/detections/trigger/${direction}`, {
+      method: 'POST',
+    })
+  }
+
   // ── RFID ──
 
   async submitRfid(eventId, rfidUid = null) {

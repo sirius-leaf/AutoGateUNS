@@ -41,9 +41,59 @@ const emit = defineEmits(['navigate'])
 
 // ── RFID Modal State ──
 const pendingRfid = ref(null) // { vehicle, direction }
+const pendingDetection = ref(null) // Deteksi radar yang awaiting_rfid
+const activeDetections = ref([]) // Semua deteksi aktif (waiting_capture, awaiting_rfid, capturing)
 const lastSeenIds = ref(new Set()) // id kendaraan yang sudah diketahui
 const firstLoad = ref(true) // skip deteksi pada load pertama
 const validationMode = ref('') // mode validasi node; plate_only = RFID opsional → skip modal
+
+const getActiveDetection = (direction) => {
+  return activeDetections.value.find(d => d.direction === direction) || null
+}
+
+const pollDetections = async () => {
+  try {
+    const data = await api.getPendingDetections()
+    const items = data.items || []
+    activeDetections.value = items
+
+    // Jika mode 'both' atau 'rfid_only', tampilkan modal saat ada deteksi awaiting_rfid
+    if (validationMode.value !== 'plate_only') {
+      const awaiting = items.find(d => d.status === 'awaiting_rfid')
+      if (awaiting) {
+        if (!pendingDetection.value || pendingDetection.value.detection_id !== awaiting.detection_id) {
+          pendingDetection.value = awaiting
+        }
+      } else if (pendingDetection.value) {
+        // Deteksi sudah selesai diproses atau ditutup
+        const currentStillActive = items.some(d => d.detection_id === pendingDetection.value.detection_id)
+        if (!currentStillActive) {
+          pendingDetection.value = null
+          fetchRecentPlates()
+        }
+      }
+    } else {
+      // Mode plate_only: jika ada capture yang selesai, refresh recent plates
+      const hasCapturing = items.some(d => d.status === 'capturing' || d.status === 'waiting_capture')
+      if (hasCapturing) {
+        // Jadwalkan refresh saat jeda selesai
+        setTimeout(() => fetchRecentPlates(), 3000)
+      }
+    }
+  } catch (err) {
+    // Silent error saat jaringan tidak tersedia
+  }
+}
+
+const handleDetectionRfidDone = ({ detection, vehicle }) => {
+  pendingDetection.value = null
+  fetchRecentPlates()
+}
+
+const handleDetectionRfidClose = () => {
+  pendingDetection.value = null
+  fetchRecentPlates()
+}
 
 const fetchValidationMode = async () => {
   try {
@@ -197,7 +247,14 @@ onMounted(() => {
   fetchValidationMode()
   fetchRecentPlates()
   fetchStatus()
-  // Polling utama: 15 detik
+  pollDetections()
+
+  // Polling deteksi radar cepat: setiap 1.2 detik
+  fastPollTimer = setInterval(() => {
+    pollDetections()
+  }, 1200)
+
+  // Polling utama data plates & status: 15 detik
   refreshTimer = setInterval(() => {
     fetchRecentPlates()
     fetchStatus()
@@ -206,6 +263,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
+  if (fastPollTimer) clearInterval(fastPollTimer)
 })
 </script>
 
@@ -262,6 +320,7 @@ onUnmounted(() => {
             :gate="gate"
             :direction="gate.direction"
             :node-status="nodeStatus"
+            :active-detection="getActiveDetection(gate.direction)"
             @capture="handleCapture"
             @refresh="handleRefresh"
             @capture-response="handleCaptureResponse"
@@ -397,9 +456,18 @@ onUnmounted(() => {
       @close="selectedPlate = null"
     />
 
-    <!-- Modal RFID Input (disembunyikan saat RFID opsional / plate_only) -->
+    <!-- Modal RFID Input dari Deteksi Radar (Alur Utama) -->
     <RfidInputModal
-      v-if="pendingRfid && validationMode !== 'plate_only'"
+      v-if="pendingDetection"
+      :detection="pendingDetection"
+      :direction="pendingDetection.direction"
+      @done="handleDetectionRfidDone"
+      @close="handleDetectionRfidClose"
+    />
+
+    <!-- Modal RFID Input (Fallback / Manual Capture) -->
+    <RfidInputModal
+      v-else-if="pendingRfid && validationMode !== 'plate_only'"
       :vehicle="pendingRfid.vehicle"
       :direction="pendingRfid.direction"
       @done="handleRfidDone"
